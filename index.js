@@ -10,6 +10,10 @@ app.use(cors());
 
 app.use("/satellites", satelliteRouter);
 
+app.get("/", (req, res) => {
+  res.json({ status: "ok", endpoints: ["/hash", "/satellites"] });
+});
+
 app.post("/hash", (req, res) => {
   const {text, algorithm} = req.body;
   const hash = crypto.createHash(algorithm).update(text).digest("hex");
