@@ -164,7 +164,18 @@
   <div id="satList"></div>
 </div>
 
-<script src="https://unpkg.com/globe.gl@2.35.2/dist/globe.gl.min.js"></script>
+<div id="loadingOverlay" style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:5;display:flex;align-items:center;justify-content:center;background:#0a0e27;">
+  <div style="text-align:center;color:#7eb8ff;">
+    <div style="font-size:2rem;margin-bottom:12px;">🌍</div>
+    <div id="loadingMsg">Loading 3D Globe...</div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/globe.gl@2.33.3/dist/globe.gl.min.js"></script>
+<script>
+if (typeof Globe === 'undefined') {
+  document.getElementById('loadingMsg').innerHTML = 'Globe.gl failed to load.<br>Try refreshing or clearing cache.';
+}
+</script>
 <script>
 (function() {
   var API_BASE = 'https://hash-generator-backend-ten.vercel.app';
@@ -191,10 +202,12 @@
   // --- GLOBE ---
   var taiwanLabel = [{ lat: 23.5, lng: 121, text: 'Taiwan 🇹🇼', color: '#ff6b6b', size: 1.5 }];
 
+  if (typeof Globe === 'undefined') return;
+
   var globe = Globe()
-    .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
-    .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
-    .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
+    .globeImageUrl('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg')
+    .bumpImageUrl('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png')
+    .backgroundImageUrl('https://cdn.jsdelivr.net/npm/three-globe/example/img/night-sky.png')
     .atmosphereColor('#3a86ff')
     .atmosphereAltitude(0.15)
     .showGraticules(true)
@@ -230,6 +243,12 @@
     .ringRepeatPeriod(1500)
     .ringColor(function() { return 'rgba(255,107,107,0.5)'; })
     (document.getElementById('globe'));
+
+  // Hide loading overlay once globe renders
+  setTimeout(function() {
+    var overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.style.display = 'none';
+  }, 2000);
 
   // Resize handler
   function onResize() {
