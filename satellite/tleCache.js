@@ -88,4 +88,25 @@ export async function getTleByCatalogNumber(noradId) {
   }
 }
 
+export async function getTleByCountry(countryCode) {
+  const cacheKey = `country:${countryCode}`;
+  const cached = cache.get(cacheKey);
+  const now = Date.now();
+
+  if (cached && (now - cached.timestamp) < CACHE_TTL_MS) {
+    return cached.data;
+  }
+
+  try {
+    const url = `https://celestrak.org/NORAD/elements/gp.php?COUNTRY=${countryCode}&FORMAT=tle`;
+    const text = await fetchTle(url);
+    const data = parseTleText(text);
+    cache.set(cacheKey, { data, timestamp: now });
+    return data;
+  } catch (err) {
+    if (cached) return cached.data;
+    throw err;
+  }
+}
+
 export { parseNoradId, parseIntlDesignator, parseEpoch };
