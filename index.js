@@ -1,11 +1,14 @@
 import express from "express";
 import crypto from "crypto";
 import cors from "cors";
+import satelliteRouter from "./satellite/router.js";
 
 const app = express();
 
 app.use(express.json());
 app.use(cors());
+
+app.use("/satellites", satelliteRouter);
 
 app.post("/hash", (req, res) => {
   const {text, algorithm} = req.body;
