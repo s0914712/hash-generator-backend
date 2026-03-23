@@ -11,148 +11,141 @@
     header {
       position: fixed; top: 0; left: 0; right: 0; z-index: 10;
       background: linear-gradient(135deg, rgba(26,31,78,0.95), rgba(10,14,39,0.95));
-      padding: 12px 20px;
+      padding: 10px 16px;
       border-bottom: 1px solid #2a2f5e;
-      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
       backdrop-filter: blur(10px);
     }
-    header h1 { font-size: 1.2rem; color: #7eb8ff; white-space: nowrap; }
-    header h1 span { font-size: 0.75rem; color: #888; margin-left: 6px; }
+    .header-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    header h1 { font-size: 1.1rem; color: #7eb8ff; white-space: nowrap; }
+    header h1 span { font-size: 0.7rem; color: #888; margin-left: 4px; }
 
-    .controls {
-      display: flex; gap: 8px; align-items: center; flex-wrap: wrap; flex: 1;
+    .controls { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; flex: 1; }
+    select, input[type="text"], button {
+      padding: 5px 8px; border-radius: 6px; border: 1px solid #3a3f6e;
+      background: #151a3e; color: #e0e0e0; font-size: 0.82rem;
     }
-    select, input, button {
-      padding: 6px 10px; border-radius: 6px; border: 1px solid #3a3f6e;
-      background: #151a3e; color: #e0e0e0; font-size: 0.85rem;
-    }
-    input { width: 150px; }
-    button {
-      background: #2563eb; border-color: #2563eb; cursor: pointer; font-weight: 600;
-    }
+    input[type="text"] { width: 140px; }
+    button { background: #2563eb; border-color: #2563eb; cursor: pointer; font-weight: 600; }
     button:hover { background: #1d4ed8; }
     button:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .filter-row {
-      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+      display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 6px;
     }
-    .filter-row label { font-size: 0.8rem; color: #888; }
-    .range-display { font-size: 0.8rem; color: #7eb8ff; min-width: 60px; }
-    input[type="range"] {
-      width: 100px; accent-color: #2563eb;
-      background: transparent; border: none; padding: 0;
-    }
+    .filter-row label { font-size: 0.75rem; color: #888; }
+    .range-val { font-size: 0.75rem; color: #7eb8ff; min-width: 55px; }
+    input[type="range"] { width: 90px; accent-color: #2563eb; background: transparent; border: none; padding: 0; }
 
     #globe { width: 100vw; height: 100vh; }
 
     .sidebar {
-      position: fixed; top: 0; right: 0; bottom: 0; width: 360px; z-index: 10;
-      overflow-y: auto; padding: 70px 16px 16px;
+      position: fixed; top: 0; right: 0; bottom: 0; width: 340px; z-index: 10;
+      overflow-y: auto; padding: 16px; padding-top: 120px;
       background: rgba(15,19,51,0.95); border-left: 1px solid #2a2f5e;
       backdrop-filter: blur(10px);
-      transform: translateX(0);
       transition: transform 0.3s;
     }
     .sidebar.collapsed { transform: translateX(100%); }
     .sidebar-toggle {
-      position: fixed; right: 360px; top: 70px; z-index: 11;
+      position: fixed; right: 340px; top: 130px; z-index: 11;
       background: #151a3e; border: 1px solid #3a3f6e; border-right: none;
       color: #7eb8ff; cursor: pointer; padding: 8px 4px; border-radius: 6px 0 0 6px;
       font-size: 1rem; transition: right 0.3s;
     }
     .sidebar-toggle.collapsed { right: 0; }
 
-    .sidebar h2 { font-size: 1rem; color: #7eb8ff; margin-bottom: 10px; }
-
+    .sidebar h2 { font-size: 0.95rem; color: #7eb8ff; margin-bottom: 8px; }
     .sat-card {
       background: #151a3e; border: 1px solid #2a2f5e; border-radius: 8px;
-      padding: 10px; margin-bottom: 8px; cursor: pointer; transition: border-color 0.2s;
+      padding: 9px; margin-bottom: 6px; cursor: pointer; transition: border-color 0.2s;
     }
     .sat-card:hover { border-color: #2563eb; }
     .sat-card.active { border-color: #7eb8ff; background: #1a2050; }
-    .sat-card .name { font-weight: 600; color: #fff; margin-bottom: 3px; font-size: 0.9rem; }
-    .sat-card .meta { font-size: 0.75rem; color: #888; }
+    .sat-card .name { font-weight: 600; color: #fff; margin-bottom: 2px; font-size: 0.85rem; }
+    .sat-card .meta { font-size: 0.72rem; color: #888; }
 
     .info-panel {
       background: #151a3e; border: 1px solid #2a2f5e; border-radius: 8px;
-      padding: 12px; margin-bottom: 10px;
+      padding: 10px; margin-bottom: 8px;
     }
-    .info-panel h3 { font-size: 0.9rem; color: #7eb8ff; margin-bottom: 6px; }
-    .info-row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 0.82rem; }
+    .info-panel h3 { font-size: 0.85rem; color: #7eb8ff; margin-bottom: 5px; }
+    .info-row { display: flex; justify-content: space-between; padding: 2px 0; font-size: 0.8rem; }
     .info-row .label { color: #888; }
     .info-row .value { color: #fff; font-weight: 500; }
 
     .pass-item {
-      background: #1a1f4e; border-radius: 6px; padding: 8px; margin-bottom: 6px; font-size: 0.78rem;
+      background: #1a1f4e; border-radius: 6px; padding: 7px; margin-bottom: 5px; font-size: 0.75rem;
     }
-    .pass-item .pass-time { color: #7eb8ff; font-weight: 600; margin-bottom: 3px; }
+    .pass-item .pass-time { color: #7eb8ff; font-weight: 600; margin-bottom: 2px; }
     .pass-item .pass-detail { color: #aaa; }
 
-    .status-bar { font-size: 0.78rem; color: #666; padding: 4px 0; }
-    .loading { color: #888; text-align: center; padding: 16px; }
+    .status-bar { font-size: 0.75rem; color: #666; padding: 3px 0; }
+    .loading { color: #888; text-align: center; padding: 14px; }
 
     @media (max-width: 768px) {
-      .sidebar { width: 100%; height: 45vh; top: auto; bottom: 0; padding-top: 12px;
-        transform: translateY(0); border-left: none; border-top: 1px solid #2a2f5e; }
+      .sidebar { width: 100%; height: 40vh; top: auto; bottom: 0; padding-top: 10px;
+        border-left: none; border-top: 1px solid #2a2f5e; }
       .sidebar.collapsed { transform: translateY(100%); }
-      .sidebar-toggle { right: auto; left: 10px; bottom: 45vh; top: auto; border-radius: 6px 6px 0 0;
-        border: 1px solid #3a3f6e; border-bottom: none; }
+      .sidebar-toggle { right: auto; left: 8px; bottom: 40vh; top: auto;
+        border-radius: 6px 6px 0 0; border: 1px solid #3a3f6e; border-bottom: none; }
       .sidebar-toggle.collapsed { bottom: 0; }
-      #globe { height: 55vh; }
     }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>Taiwan Satellite Tracker 3D <span>衛星追蹤器</span></h1>
-  <div class="controls">
-    <select id="sourceType">
-      <option value="group">By Group</option>
-      <option value="country">By Country</option>
-    </select>
-    <select id="groupSelect">
-      <option value="stations">Space Stations</option>
-      <option value="weather">Weather</option>
-      <option value="starlink">Starlink</option>
-      <option value="gps-ops">GPS</option>
-      <option value="galileo">Galileo</option>
-      <option value="active">All Active</option>
-    </select>
-    <select id="countrySelect" style="display:none;">
-      <option value="US">United States</option>
-      <option value="PRC">China</option>
-      <option value="CIS">Russia/CIS</option>
-      <option value="JPN">Japan</option>
-      <option value="IND">India</option>
-      <option value="ESA">ESA</option>
-      <option value="FR">France</option>
-      <option value="DE">Germany</option>
-      <option value="UK">United Kingdom</option>
-      <option value="CA">Canada</option>
-      <option value="KR">South Korea</option>
-      <option value="TW">Taiwan</option>
-      <option value="IL">Israel</option>
-      <option value="BR">Brazil</option>
-      <option value="AU">Australia</option>
-    </select>
-    <input type="text" id="searchInput" placeholder="Search name...">
-    <button id="loadBtn">Load</button>
-    <button id="trackBtn" disabled>Track</button>
+  <div class="header-top">
+    <h1>Taiwan Satellite Tracker 3D <span>衛星追蹤器</span></h1>
+    <div class="controls">
+      <select id="sourceType">
+        <option value="group">By Group</option>
+        <option value="country">By Country</option>
+      </select>
+      <select id="groupSelect">
+        <option value="stations">Space Stations</option>
+        <option value="weather">Weather</option>
+        <option value="starlink">Starlink</option>
+        <option value="gps-ops">GPS</option>
+        <option value="galileo">Galileo</option>
+        <option value="active">All Active</option>
+      </select>
+      <select id="countrySelect" style="display:none;">
+        <option value="US">United States</option>
+        <option value="PRC">China</option>
+        <option value="CIS">Russia/CIS</option>
+        <option value="JPN">Japan</option>
+        <option value="IND">India</option>
+        <option value="ESA">ESA</option>
+        <option value="FR">France</option>
+        <option value="DE">Germany</option>
+        <option value="UK">United Kingdom</option>
+        <option value="CA">Canada</option>
+        <option value="KR">South Korea</option>
+        <option value="TW">Taiwan</option>
+        <option value="IL">Israel</option>
+        <option value="BR">Brazil</option>
+        <option value="AU">Australia</option>
+      </select>
+      <input type="text" id="searchInput" placeholder="Search name...">
+      <button id="loadBtn">Load</button>
+      <button id="trackBtn" disabled>Track</button>
+    </div>
   </div>
   <div class="filter-row">
     <label>Altitude:</label>
     <input type="range" id="altMin" min="0" max="2000" value="0" step="50">
-    <span class="range-display" id="altMinVal">0 km</span>
-    <span style="color:#666;">—</span>
+    <span class="range-val" id="altMinVal">0 km</span>
+    <span style="color:#555;">—</span>
     <input type="range" id="altMax" min="0" max="50000" value="50000" step="500">
-    <span class="range-display" id="altMaxVal">50000 km</span>
+    <span class="range-val" id="altMaxVal">50000 km</span>
+    <button id="applyFilter" style="font-size:0.75rem;padding:3px 8px;">Apply</button>
   </div>
 </header>
 
 <div id="globe"></div>
 
-<button class="sidebar-toggle" id="sidebarToggle">◀</button>
+<button class="sidebar-toggle" id="sidebarToggle">&laquo;</button>
 <div class="sidebar" id="sidebar">
   <div id="positionPanel" class="info-panel" style="display:none;">
     <h3 id="satTitle">Satellite Position</h3>
@@ -162,12 +155,10 @@
     <div class="info-row"><span class="label">Velocity</span><span class="value" id="posVel">—</span></div>
     <div class="info-row"><span class="label">Updated</span><span class="value" id="posTime">—</span></div>
   </div>
-
   <div id="passesPanel" style="display:none;">
     <h3>Upcoming Passes over Taiwan</h3>
     <div id="passesList"></div>
   </div>
-
   <h2>Satellites</h2>
   <div class="status-bar" id="statusBar">Select a source and click Load</div>
   <div id="satList"></div>
@@ -176,153 +167,154 @@
 <script src="https://unpkg.com/globe.gl@2.35.2/dist/globe.gl.min.js"></script>
 <script>
 (function() {
-  // --- CONFIG ---
-  const API_BASE = 'https://hash-generator-backend-ten.vercel.app';
+  var API_BASE = 'https://hash-generator-backend-ten.vercel.app';
 
-  // --- GLOBE SETUP ---
-  const globe = Globe()
+  // --- DOM refs ---
+  var sourceType = document.getElementById('sourceType');
+  var groupSelect = document.getElementById('groupSelect');
+  var countrySelect = document.getElementById('countrySelect');
+  var searchInput = document.getElementById('searchInput');
+  var loadBtn = document.getElementById('loadBtn');
+  var trackBtn = document.getElementById('trackBtn');
+  var satList = document.getElementById('satList');
+  var statusBar = document.getElementById('statusBar');
+  var positionPanel = document.getElementById('positionPanel');
+  var passesPanel = document.getElementById('passesPanel');
+  var sidebarToggle = document.getElementById('sidebarToggle');
+  var sidebar = document.getElementById('sidebar');
+  var altMin = document.getElementById('altMin');
+  var altMax = document.getElementById('altMax');
+  var altMinVal = document.getElementById('altMinVal');
+  var altMaxVal = document.getElementById('altMaxVal');
+  var applyFilter = document.getElementById('applyFilter');
+
+  // --- GLOBE ---
+  var taiwanLabel = [{ lat: 23.5, lng: 121, text: 'Taiwan 🇹🇼', color: '#ff6b6b', size: 1.5 }];
+
+  var globe = Globe()
     .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
     .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
     .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
     .atmosphereColor('#3a86ff')
     .atmosphereAltitude(0.15)
+    .showGraticules(true)
     .pointOfView({ lat: 23.5, lng: 121, altitude: 2.5 })
-    // Taiwan marker
-    .labelsData([{ lat: 23.5, lng: 121, text: 'Taiwan', color: '#ff6b6b', size: 1.2 }])
+    // Taiwan label
+    .labelsData(taiwanLabel)
     .labelText('text')
     .labelColor('color')
     .labelSize('size')
-    .labelDotRadius(0.4)
+    .labelDotRadius(0.5)
     .labelAltitude(0.01)
-    // Satellite points
-    .customLayerData([])
-    .customThreeObject(d => {
-      const group = new THREE.Group();
-      const geo = new THREE.SphereGeometry(0.6, 8, 8);
-      const mat = new THREE.MeshBasicMaterial({ color: d.isSelected ? 0x00ff88 : 0x7eb8ff });
-      const mesh = new THREE.Mesh(geo, mat);
-      group.add(mesh);
-
-      // Glow
-      const glowGeo = new THREE.SphereGeometry(1.0, 8, 8);
-      const glowMat = new THREE.MeshBasicMaterial({ color: d.isSelected ? 0x00ff88 : 0x4488ff, transparent: true, opacity: 0.3 });
-      group.add(new THREE.Mesh(glowGeo, glowMat));
-      return group;
-    })
-    .customThreeObjectUpdate((obj, d) => {
-      Object.assign(obj.position, globe.getCoords(d.lat, d.lng, d.alt / 6371));
-    })
-    // Orbit arcs
-    .arcsData([])
-    .arcColor(() => ['rgba(37,99,235,0.6)', 'rgba(37,99,235,0.1)'])
-    .arcStroke(0.5)
-    .arcDashLength(0.4)
-    .arcDashGap(0.2)
-    .arcDashAnimateTime(4000)
+    // Satellite points (using pointsData)
+    .pointsData([])
+    .pointLat('lat')
+    .pointLng('lng')
+    .pointAltitude(function(d) { return d.alt / 6371; })
+    .pointRadius(function(d) { return d.isSelected ? 0.7 : 0.35; })
+    .pointColor(function(d) { return d.isSelected ? '#00ff88' : '#7eb8ff'; })
+    .pointsMerge(false)
+    // Orbit paths
+    .pathsData([])
+    .pathPointLat(function(p) { return p[0]; })
+    .pathPointLng(function(p) { return p[1]; })
+    .pathColor(function() { return 'rgba(37,99,235,0.6)'; })
+    .pathStroke(1.5)
+    .pathDashLength(0.01)
+    .pathDashGap(0.005)
+    .pathDashAnimateTime(60000)
+    // Rings for Taiwan
+    .ringsData([{ lat: 23.5, lng: 121 }])
+    .ringMaxRadius(3)
+    .ringPropagationSpeed(1)
+    .ringRepeatPeriod(1500)
+    .ringColor(function() { return 'rgba(255,107,107,0.5)'; })
     (document.getElementById('globe'));
 
-  // Access THREE from globe
-  const THREE = globe.scene().constructor._context || window.THREE;
-
-  // Resize
-  window.addEventListener('resize', () => {
+  // Resize handler
+  function onResize() {
     globe.width(window.innerWidth);
     globe.height(window.innerHeight);
-  });
+  }
+  window.addEventListener('resize', onResize);
+  onResize();
 
-  // --- DOM ---
-  const sourceType = document.getElementById('sourceType');
-  const groupSelect = document.getElementById('groupSelect');
-  const countrySelect = document.getElementById('countrySelect');
-  const searchInput = document.getElementById('searchInput');
-  const loadBtn = document.getElementById('loadBtn');
-  const trackBtn = document.getElementById('trackBtn');
-  const satList = document.getElementById('satList');
-  const statusBar = document.getElementById('statusBar');
-  const positionPanel = document.getElementById('positionPanel');
-  const passesPanel = document.getElementById('passesPanel');
-  const sidebarToggle = document.getElementById('sidebarToggle');
-  const sidebar = document.getElementById('sidebar');
-  const altMin = document.getElementById('altMin');
-  const altMax = document.getElementById('altMax');
-  const altMinVal = document.getElementById('altMinVal');
-  const altMaxVal = document.getElementById('altMaxVal');
-
-  // Toggle source type
-  sourceType.addEventListener('change', () => {
-    const isCountry = sourceType.value === 'country';
+  // --- Source type toggle ---
+  function syncSourceType() {
+    var isCountry = sourceType.value === 'country';
     groupSelect.style.display = isCountry ? 'none' : '';
     countrySelect.style.display = isCountry ? '' : 'none';
-  });
+  }
+  sourceType.addEventListener('change', syncSourceType);
+  syncSourceType(); // sync on page load
 
   // Sidebar toggle
-  sidebarToggle.addEventListener('click', () => {
+  sidebarToggle.addEventListener('click', function() {
     sidebar.classList.toggle('collapsed');
     sidebarToggle.classList.toggle('collapsed');
-    sidebarToggle.textContent = sidebar.classList.contains('collapsed') ? '▶' : '◀';
+    sidebarToggle.innerHTML = sidebar.classList.contains('collapsed') ? '&raquo;' : '&laquo;';
   });
 
   // Altitude range display
-  altMin.addEventListener('input', () => { altMinVal.textContent = altMin.value + ' km'; });
-  altMax.addEventListener('input', () => { altMaxVal.textContent = altMax.value + ' km'; });
+  altMin.addEventListener('input', function() { altMinVal.textContent = altMin.value + ' km'; });
+  altMax.addEventListener('input', function() { altMaxVal.textContent = altMax.value + ' km'; });
 
   // --- STATE ---
-  let satellites = [];
-  let selectedSat = null;
-  let trackInterval = null;
-  let satPositions = []; // { lat, lng, alt, name, noradId, isSelected }
-  let orbitArcs = [];
+  var satellites = [];
+  var selectedSat = null;
+  var trackInterval = null;
+  var satPositions = [];
+  var currentOrbitPath = [];
 
   // --- API ---
-  async function api(path) {
-    const res = await fetch(`${API_BASE}${path}`);
-    if (!res.ok) throw new Error(`API error: ${res.status}`);
-    return res.json();
+  function api(path) {
+    return fetch(API_BASE + path).then(function(res) {
+      if (!res.ok) throw new Error('API error: ' + res.status);
+      return res.json();
+    });
   }
 
   // --- LOAD ---
-  loadBtn.addEventListener('click', async () => {
+  loadBtn.addEventListener('click', function() {
     loadBtn.disabled = true;
     statusBar.textContent = 'Loading...';
     satList.innerHTML = '<div class="loading">Loading satellites...</div>';
 
-    try {
-      let url = '/satellites?';
-      if (sourceType.value === 'country') {
-        url += `country=${countrySelect.value}`;
-      } else {
-        url += `group=${groupSelect.value}`;
-      }
-      const search = searchInput.value.trim();
-      if (search) url += `&search=${encodeURIComponent(search)}`;
-
-      const data = await api(url);
-      satellites = data.satellites;
-      statusBar.textContent = `${data.count} satellites in "${data.group}"`;
-      renderSatList();
-
-      // Load positions for all loaded satellites (first 50 to avoid overload)
-      loadAllPositions();
-    } catch (err) {
-      statusBar.textContent = `Error: ${err.message}`;
-      satList.innerHTML = '<div class="loading">Failed to load satellites.</div>';
-    } finally {
-      loadBtn.disabled = false;
+    var url = '/satellites?';
+    if (sourceType.value === 'country') {
+      url += 'country=' + countrySelect.value;
+    } else {
+      url += 'group=' + groupSelect.value;
     }
+    var search = searchInput.value.trim();
+    if (search) url += '&search=' + encodeURIComponent(search);
+
+    api(url).then(function(data) {
+      satellites = data.satellites;
+      statusBar.textContent = data.count + ' satellites in "' + data.group + '"';
+      renderSatList();
+      loadAllPositions();
+    }).catch(function(err) {
+      statusBar.textContent = 'Error: ' + err.message;
+      satList.innerHTML = '<div class="loading">Failed to load satellites.</div>';
+    }).finally(function() {
+      loadBtn.disabled = false;
+    });
   });
 
-  searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') loadBtn.click(); });
+  searchInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') loadBtn.click(); });
 
-  async function loadAllPositions() {
-    const batch = satellites.slice(0, 50);
+  function loadAllPositions() {
+    var batch = satellites.slice(0, 50);
     satPositions = [];
-    const minAlt = parseInt(altMin.value);
-    const maxAlt = parseInt(altMax.value);
+    globe.pointsData([]);
+    var minAlt = parseInt(altMin.value);
+    var maxAlt = parseInt(altMax.value);
+    var loaded = 0;
 
-    const promises = batch.map(async (sat) => {
-      try {
-        const data = await api(`/satellites/${sat.noradId}/position`);
-        const pos = data.position;
+    batch.forEach(function(sat) {
+      api('/satellites/' + sat.noradId + '/position').then(function(data) {
+        var pos = data.position;
         if (pos.altitude >= minAlt && pos.altitude <= maxAlt) {
           satPositions.push({
             lat: pos.latitude,
@@ -333,20 +325,29 @@
             isSelected: selectedSat && selectedSat.noradId === sat.noradId,
           });
         }
-      } catch (e) { /* skip failed */ }
+      }).catch(function() {}).finally(function() {
+        loaded++;
+        if (loaded === batch.length) {
+          globe.pointsData(satPositions);
+        }
+      });
     });
 
-    await Promise.all(promises);
-    globe.customLayerData(satPositions);
+    if (batch.length === 0) globe.pointsData([]);
   }
+
+  // Apply altitude filter
+  applyFilter.addEventListener('click', function() {
+    if (satellites.length > 0) loadAllPositions();
+  });
 
   function renderSatList() {
     satList.innerHTML = '';
-    satellites.forEach(sat => {
-      const card = document.createElement('div');
+    satellites.forEach(function(sat) {
+      var card = document.createElement('div');
       card.className = 'sat-card' + (selectedSat && selectedSat.noradId === sat.noradId ? ' active' : '');
-      card.innerHTML = `<div class="name">${sat.name}</div><div class="meta">NORAD: ${sat.noradId} | Epoch: ${sat.epochYear}-${sat.epochDay.toFixed(1)}</div>`;
-      card.addEventListener('click', () => selectSat(sat));
+      card.innerHTML = '<div class="name">' + sat.name + '</div><div class="meta">NORAD: ' + sat.noradId + ' | Epoch: ' + sat.epochYear + '-' + sat.epochDay.toFixed(1) + '</div>';
+      card.addEventListener('click', function() { selectSat(sat); });
       satList.appendChild(card);
     });
   }
@@ -359,105 +360,94 @@
     trackSatellite();
   }
 
-  trackBtn.addEventListener('click', () => { if (selectedSat) trackSatellite(); });
+  trackBtn.addEventListener('click', function() { if (selectedSat) trackSatellite(); });
 
-  async function trackSatellite() {
+  function trackSatellite() {
     if (!selectedSat) return;
     clearTracking();
 
-    const id = selectedSat.noradId;
+    var id = selectedSat.noradId;
     positionPanel.style.display = 'block';
     document.getElementById('satTitle').textContent = selectedSat.name;
 
     // Load position
-    await updatePosition(id);
+    updatePosition(id);
 
     // Load orbit path
-    try {
-      const orbitData = await api(`/satellites/${id}/orbit?duration=90&step=1`);
-      const points = orbitData.path;
-      // Convert to arcs (pairs of points)
-      orbitArcs = [];
-      for (let i = 0; i < points.length - 1; i++) {
-        orbitArcs.push({
-          startLat: points[i].latitude,
-          startLng: points[i].longitude,
-          endLat: points[i + 1].latitude,
-          endLng: points[i + 1].longitude,
-        });
-      }
-      globe.arcsData(orbitArcs);
-    } catch (e) { /* ignore */ }
+    api('/satellites/' + id + '/orbit?duration=90&step=1').then(function(orbitData) {
+      var pts = orbitData.path;
+      currentOrbitPath = [pts.map(function(p) { return [p.latitude, p.longitude]; })];
+      globe.pathsData(currentOrbitPath);
+    }).catch(function() {});
 
     // Load passes
-    try {
-      passesPanel.style.display = 'block';
-      const passData = await api(`/satellites/${id}/passes?hours=24`);
+    passesPanel.style.display = 'block';
+    api('/satellites/' + id + '/passes?hours=24').then(function(passData) {
       renderPasses(passData.passes);
-    } catch (e) {
+    }).catch(function() {
       document.getElementById('passesList').innerHTML = '<div class="loading">Could not load passes</div>';
-    }
+    });
 
-    // Auto-refresh
-    trackInterval = setInterval(() => updatePosition(id), 5000);
+    // Auto-refresh every 5 seconds
+    trackInterval = setInterval(function() { updatePosition(id); }, 5000);
   }
 
-  async function updatePosition(id) {
-    try {
-      const data = await api(`/satellites/${id}/position`);
-      const pos = data.position;
+  function updatePosition(id) {
+    api('/satellites/' + id + '/position').then(function(data) {
+      var pos = data.position;
 
-      document.getElementById('posLat').textContent = pos.latitude.toFixed(4) + '°';
-      document.getElementById('posLon').textContent = pos.longitude.toFixed(4) + '°';
+      document.getElementById('posLat').textContent = pos.latitude.toFixed(4) + '\u00B0';
+      document.getElementById('posLon').textContent = pos.longitude.toFixed(4) + '\u00B0';
       document.getElementById('posAlt').textContent = pos.altitude.toFixed(1) + ' km';
       document.getElementById('posVel').textContent = pos.velocity.toFixed(2) + ' km/s';
       document.getElementById('posTime').textContent = new Date(pos.timestamp).toLocaleTimeString();
 
-      // Update selected satellite on globe
-      const idx = satPositions.findIndex(s => s.noradId == id);
-      const entry = { lat: pos.latitude, lng: pos.longitude, alt: pos.altitude, name: data.name, noradId: id, isSelected: true };
-      if (idx >= 0) {
-        satPositions[idx] = entry;
-      } else {
-        satPositions.push(entry);
+      // Update or add the selected satellite point
+      var entry = {
+        lat: pos.latitude, lng: pos.longitude, alt: pos.altitude,
+        name: data.name, noradId: id, isSelected: true,
+      };
+      var found = false;
+      for (var i = 0; i < satPositions.length; i++) {
+        if (satPositions[i].noradId == id) {
+          satPositions[i] = entry;
+          found = true;
+          break;
+        }
       }
-      globe.customLayerData([...satPositions]);
+      if (!found) satPositions.push(entry);
+      globe.pointsData(satPositions.slice());
 
-      // Point camera at satellite
+      // Smooth camera pan
       globe.pointOfView({ lat: pos.latitude, lng: pos.longitude, altitude: 2.0 }, 1000);
-    } catch (e) {
+    }).catch(function() {
       document.getElementById('posTime').textContent = 'Error';
-    }
+    });
   }
 
   function renderPasses(passes) {
-    const list = document.getElementById('passesList');
-    if (passes.length === 0) {
+    var list = document.getElementById('passesList');
+    if (!passes || passes.length === 0) {
       list.innerHTML = '<div class="loading">No passes in the next 24 hours</div>';
       return;
     }
-    list.innerHTML = passes.map(p => `
-      <div class="pass-item">
-        <div class="pass-time">${new Date(p.startTime).toLocaleString('zh-TW')} — ${new Date(p.endTime).toLocaleTimeString('zh-TW')}</div>
-        <div class="pass-detail">
-          Max Elevation: ${p.maxElevation}° | Duration: ${Math.floor(p.durationSeconds/60)}m ${p.durationSeconds%60}s<br>
-          Azimuth: ${p.startAzimuth}° → ${p.endAzimuth}°
-        </div>
-      </div>
-    `).join('');
+    list.innerHTML = passes.map(function(p) {
+      return '<div class="pass-item">' +
+        '<div class="pass-time">' + new Date(p.startTime).toLocaleString('zh-TW') + ' — ' + new Date(p.endTime).toLocaleTimeString('zh-TW') + '</div>' +
+        '<div class="pass-detail">' +
+        'Max Elevation: ' + p.maxElevation + '° | Duration: ' + Math.floor(p.durationSeconds/60) + 'm ' + (p.durationSeconds%60) + 's<br>' +
+        'Azimuth: ' + p.startAzimuth + '° → ' + p.endAzimuth + '°' +
+        '</div></div>';
+    }).join('');
   }
 
   function clearTracking() {
     if (trackInterval) { clearInterval(trackInterval); trackInterval = null; }
-    orbitArcs = [];
-    globe.arcsData([]);
+    currentOrbitPath = [];
+    globe.pathsData([]);
     positionPanel.style.display = 'none';
     passesPanel.style.display = 'none';
   }
-
-  // Altitude filter re-apply
-  altMin.addEventListener('change', loadAllPositions);
-  altMax.addEventListener('change', loadAllPositions);
 })();
 </script>
 </body>
