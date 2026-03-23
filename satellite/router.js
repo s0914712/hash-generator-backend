@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { SATELLITE_GROUPS, DEFAULT_GROUP, TAIWAN } from './constants.js';
-import { getTleByGroup, getTleByCatalogNumber, parseNoradId, parseIntlDesignator, parseEpoch } from './tleCache.js';
+import { SATELLITE_GROUPS, DEFAULT_GROUP, TAIWAN, COUNTRY_CODES } from './constants.js';
+import { getTleByGroup, getTleByCatalogNumber, getTleByCountry, parseNoradId, parseIntlDesignator, parseEpoch } from './tleCache.js';
 import { getPosition, getOrbitPath, getPasses } from './propagator.js';
 
 const router = Router();
@@ -10,15 +10,26 @@ router.get('/', async (req, res) => {
   try {
     const group = req.query.group || DEFAULT_GROUP;
     const search = req.query.search;
+    const country = req.query.country;
 
-    if (!SATELLITE_GROUPS[group]) {
-      return res.status(400).json({
-        error: 'Unknown satellite group',
-        validGroups: Object.keys(SATELLITE_GROUPS),
-      });
+    let satellites;
+    if (country) {
+      if (!COUNTRY_CODES[country]) {
+        return res.status(400).json({
+          error: 'Unknown country code',
+          validCountries: COUNTRY_CODES,
+        });
+      }
+      satellites = await getTleByCountry(country);
+    } else {
+      if (!SATELLITE_GROUPS[group]) {
+        return res.status(400).json({
+          error: 'Unknown satellite group',
+          validGroups: Object.keys(SATELLITE_GROUPS),
+        });
+      }
+      satellites = await getTleByGroup(group);
     }
-
-    let satellites = await getTleByGroup(group);
     let results = satellites.map(sat => {
       const { epochYear, epochDay } = parseEpoch(sat.tleLine1);
       return {
@@ -35,10 +46,15 @@ router.get('/', async (req, res) => {
       results = results.filter(s => s.name.toLowerCase().includes(q));
     }
 
-    res.json({ group, count: results.length, satellites: results });
+    res.json({ group: country || group, count: results.length, satellites: results });
   } catch (err) {
     res.status(502).json({ error: 'Failed to fetch TLE data from CelesTrak' });
   }
+});
+
+// GET /satellites/countries - List available country codes
+router.get('/countries', (req, res) => {
+  res.json({ countries: COUNTRY_CODES });
 });
 
 // GET /satellites/:id/position - Current position

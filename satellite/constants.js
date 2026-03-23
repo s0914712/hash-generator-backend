@@ -24,3 +24,23 @@ export const SATELLITE_GROUPS = {
 };
 
 export const DEFAULT_GROUP = 'stations';
+
+// Country codes supported by CelesTrak
+export const COUNTRY_CODES = {
+  'US': 'United States',
+  'PRC': 'China',
+  'CIS': 'Russia/CIS',
+  'JPN': 'Japan',
+  'IND': 'India',
+  'ESA': 'ESA',
+  'IT': 'Italy',
+  'FR': 'France',
+  'DE': 'Germany',
+  'UK': 'United Kingdom',
+  'CA': 'Canada',
+  'KR': 'South Korea',
+  'TW': 'Taiwan',
+  'IL': 'Israel',
+  'BR': 'Brazil',
+  'AU': 'Australia',
+};
