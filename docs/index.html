@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Taiwan Satellite Tracker</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0e27; color: #e0e0e0; }
+
+    header {
+      background: linear-gradient(135deg, #1a1f4e, #0a0e27);
+      padding: 16px 24px;
+      border-bottom: 1px solid #2a2f5e;
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    }
+    header h1 { font-size: 1.3rem; color: #7eb8ff; white-space: nowrap; }
+    header h1 span { font-size: 0.8rem; color: #888; margin-left: 8px; }
+
+    .controls {
+      display: flex; gap: 10px; align-items: center; flex-wrap: wrap; flex: 1;
+    }
+    select, input, button {
+      padding: 8px 12px; border-radius: 6px; border: 1px solid #3a3f6e;
+      background: #151a3e; color: #e0e0e0; font-size: 0.9rem;
+    }
+    input { width: 180px; }
+    button {
+      background: #2563eb; border-color: #2563eb; cursor: pointer; font-weight: 600;
+    }
+    button:hover { background: #1d4ed8; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .main { display: flex; height: calc(100vh - 64px); }
+
+    #map { flex: 1; min-width: 0; }
+
+    .sidebar {
+      width: 360px; overflow-y: auto; padding: 16px;
+      background: #0f1333; border-left: 1px solid #2a2f5e;
+    }
+    .sidebar h2 { font-size: 1rem; color: #7eb8ff; margin-bottom: 12px; }
+
+    .sat-card {
+      background: #151a3e; border: 1px solid #2a2f5e; border-radius: 8px;
+      padding: 12px; margin-bottom: 10px; cursor: pointer; transition: border-color 0.2s;
+    }
+    .sat-card:hover { border-color: #2563eb; }
+    .sat-card.active { border-color: #7eb8ff; background: #1a2050; }
+    .sat-card .name { font-weight: 600; color: #fff; margin-bottom: 4px; }
+    .sat-card .meta { font-size: 0.8rem; color: #888; }
+
+    .info-panel {
+      background: #151a3e; border: 1px solid #2a2f5e; border-radius: 8px;
+      padding: 14px; margin-bottom: 12px;
+    }
+    .info-panel h3 { font-size: 0.95rem; color: #7eb8ff; margin-bottom: 8px; }
+    .info-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.85rem; }
+    .info-row .label { color: #888; }
+    .info-row .value { color: #fff; font-weight: 500; }
+
+    .pass-item {
+      background: #1a1f4e; border-radius: 6px; padding: 10px; margin-bottom: 8px;
+      font-size: 0.82rem;
+    }
+    .pass-item .pass-time { color: #7eb8ff; font-weight: 600; margin-bottom: 4px; }
+    .pass-item .pass-detail { color: #aaa; }
+
+    .status-bar {
+      font-size: 0.8rem; color: #666; padding: 4px 0;
+    }
+
+    .loading { color: #888; text-align: center; padding: 20px; }
+
+    @media (max-width: 768px) {
+      .main { flex-direction: column; }
+      .sidebar { width: 100%; height: 40vh; border-left: none; border-top: 1px solid #2a2f5e; }
+      #map { height: 60vh; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Taiwan Satellite Tracker <span>衛星追蹤器</span></h1>
+  <div class="controls">
+    <select id="groupSelect">
+      <option value="stations">Space Stations</option>
+      <option value="weather">Weather</option>
+      <option value="starlink">Starlink</option>
+      <option value="gps-ops">GPS</option>
+      <option value="galileo">Galileo</option>
+      <option value="active">All Active</option>
+    </select>
+    <input type="text" id="searchInput" placeholder="Search satellite name...">
+    <button id="loadBtn">Load</button>
+    <button id="trackBtn" disabled>Track Selected</button>
+  </div>
+</header>
+
+<div class="main">
+  <div id="map"></div>
+  <div class="sidebar">
+    <div id="positionPanel" class="info-panel" style="display:none;">
+      <h3 id="satTitle">Satellite Position</h3>
+      <div class="info-row"><span class="label">Latitude</span><span class="value" id="posLat">—</span></div>
+      <div class="info-row"><span class="label">Longitude</span><span class="value" id="posLon">—</span></div>
+      <div class="info-row"><span class="label">Altitude</span><span class="value" id="posAlt">—</span></div>
+      <div class="info-row"><span class="label">Velocity</span><span class="value" id="posVel">—</span></div>
+      <div class="info-row"><span class="label">Updated</span><span class="value" id="posTime">—</span></div>
+    </div>
+
+    <div id="passesPanel" style="display:none;">
+      <h3>Upcoming Passes over Taiwan</h3>
+      <div id="passesList"></div>
+    </div>
+
+    <h2>Satellites</h2>
+    <div class="status-bar" id="statusBar">Select a group and click Load</div>
+    <div id="satList"></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function() {
+  // --- CONFIG ---
+  const API_BASE = localStorage.getItem('apiBase') || 'https://hash-generator-backend-5wu8.vercel.app';
+
+  // Prompt user for API URL if not set
+  if (!localStorage.getItem('apiBase')) {
+    const url = prompt(
+      'Enter your Vercel backend URL (e.g. https://my-app.vercel.app):\n\n' +
+      'This will be saved in localStorage for future visits.'
+    );
+    if (url) {
+      localStorage.setItem('apiBase', url.replace(/\/+$/, ''));
+      location.reload();
+      return;
+    }
+  }
+
+  // --- MAP SETUP ---
+  const map = L.map('map').setView([23.5, 121], 4);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap &copy; CARTO',
+    maxZoom: 18,
+  }).addTo(map);
+
+  // Taiwan marker
+  const taiwanIcon = L.divIcon({ className: '', html: '<div style="color:#ff6b6b;font-size:20px;">📍</div>', iconSize: [20, 20], iconAnchor: [10, 20] });
+  L.marker([23.5, 121], { icon: taiwanIcon }).addTo(map).bindPopup('Taiwan (23.5°N, 121°E)');
+
+  // Satellite icon
+  function satIcon(color = '#7eb8ff') {
+    return L.divIcon({ className: '', html: `<div style="color:${color};font-size:16px;">🛰️</div>`, iconSize: [16, 16], iconAnchor: [8, 8] });
+  }
+
+  // --- STATE ---
+  let satellites = [];
+  let selectedSat = null;
+  let satMarker = null;
+  let orbitLine = null;
+  let trackInterval = null;
+
+  const groupSelect = document.getElementById('groupSelect');
+  const searchInput = document.getElementById('searchInput');
+  const loadBtn = document.getElementById('loadBtn');
+  const trackBtn = document.getElementById('trackBtn');
+  const satList = document.getElementById('satList');
+  const statusBar = document.getElementById('statusBar');
+  const positionPanel = document.getElementById('positionPanel');
+  const passesPanel = document.getElementById('passesPanel');
+
+  // --- API CALLS ---
+  async function api(path) {
+    const res = await fetch(`${API_BASE}${path}`);
+    if (!res.ok) throw new Error(`API error: ${res.status}`);
+    return res.json();
+  }
+
+  // --- LOAD SATELLITES ---
+  loadBtn.addEventListener('click', async () => {
+    const group = groupSelect.value;
+    const search = searchInput.value.trim();
+    loadBtn.disabled = true;
+    statusBar.textContent = 'Loading...';
+    satList.innerHTML = '<div class="loading">Loading satellites...</div>';
+
+    try {
+      let url = `/satellites?group=${group}`;
+      if (search) url += `&search=${encodeURIComponent(search)}`;
+      const data = await api(url);
+      satellites = data.satellites;
+      statusBar.textContent = `${data.count} satellites in "${data.group}"`;
+      renderSatList();
+    } catch (err) {
+      statusBar.textContent = `Error: ${err.message}`;
+      satList.innerHTML = `<div class="loading">Failed to load. Check API URL in localStorage.</div>`;
+    } finally {
+      loadBtn.disabled = false;
+    }
+  });
+
+  searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') loadBtn.click(); });
+
+  function renderSatList() {
+    satList.innerHTML = '';
+    satellites.forEach(sat => {
+      const card = document.createElement('div');
+      card.className = 'sat-card' + (selectedSat && selectedSat.noradId === sat.noradId ? ' active' : '');
+      card.innerHTML = `<div class="name">${sat.name}</div><div class="meta">NORAD: ${sat.noradId} | Epoch: ${sat.epochYear}-${sat.epochDay.toFixed(1)}</div>`;
+      card.addEventListener('click', () => selectSat(sat));
+      satList.appendChild(card);
+    });
+  }
+
+  // --- SELECT & TRACK ---
+  function selectSat(sat) {
+    selectedSat = sat;
+    trackBtn.disabled = false;
+    renderSatList();
+    trackSatellite();
+  }
+
+  trackBtn.addEventListener('click', () => { if (selectedSat) trackSatellite(); });
+
+  async function trackSatellite() {
+    if (!selectedSat) return;
+    clearTracking();
+
+    const id = selectedSat.noradId;
+    positionPanel.style.display = 'block';
+    document.getElementById('satTitle').textContent = selectedSat.name;
+
+    // Load position
+    await updatePosition(id);
+
+    // Load orbit path
+    try {
+      const orbitData = await api(`/satellites/${id}/orbit?duration=90&step=1`);
+      const latlngs = orbitData.path.map(p => [p.latitude, p.longitude]);
+      orbitLine = L.polyline(latlngs, { color: '#2563eb', weight: 2, opacity: 0.6, dashArray: '5,5' }).addTo(map);
+    } catch (e) { /* ignore orbit errors */ }
+
+    // Load passes
+    try {
+      passesPanel.style.display = 'block';
+      const passData = await api(`/satellites/${id}/passes?hours=24`);
+      renderPasses(passData.passes);
+    } catch (e) {
+      document.getElementById('passesList').innerHTML = '<div class="loading">Could not load passes</div>';
+    }
+
+    // Auto-refresh position every 5 seconds
+    trackInterval = setInterval(() => updatePosition(id), 5000);
+  }
+
+  async function updatePosition(id) {
+    try {
+      const data = await api(`/satellites/${id}/position`);
+      const pos = data.position;
+
+      document.getElementById('posLat').textContent = pos.latitude.toFixed(4) + '°';
+      document.getElementById('posLon').textContent = pos.longitude.toFixed(4) + '°';
+      document.getElementById('posAlt').textContent = pos.altitude.toFixed(1) + ' km';
+      document.getElementById('posVel').textContent = pos.velocity.toFixed(2) + ' km/s';
+      document.getElementById('posTime').textContent = new Date(pos.timestamp).toLocaleTimeString();
+
+      const latlng = [pos.latitude, pos.longitude];
+      if (satMarker) {
+        satMarker.setLatLng(latlng);
+      } else {
+        satMarker = L.marker(latlng, { icon: satIcon() }).addTo(map);
+        map.setView(latlng, 4);
+      }
+      satMarker.bindPopup(`<b>${data.name}</b><br>Alt: ${pos.altitude.toFixed(1)} km`);
+    } catch (e) {
+      document.getElementById('posTime').textContent = 'Error';
+    }
+  }
+
+  function renderPasses(passes) {
+    const list = document.getElementById('passesList');
+    if (passes.length === 0) {
+      list.innerHTML = '<div class="loading">No passes in the next 24 hours</div>';
+      return;
+    }
+    list.innerHTML = passes.map(p => `
+      <div class="pass-item">
+        <div class="pass-time">${new Date(p.startTime).toLocaleString('zh-TW')} — ${new Date(p.endTime).toLocaleTimeString('zh-TW')}</div>
+        <div class="pass-detail">
+          Max Elevation: ${p.maxElevation}° | Duration: ${Math.floor(p.durationSeconds/60)}m ${p.durationSeconds%60}s<br>
+          Azimuth: ${p.startAzimuth}° → ${p.endAzimuth}°
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function clearTracking() {
+    if (trackInterval) { clearInterval(trackInterval); trackInterval = null; }
+    if (satMarker) { map.removeLayer(satMarker); satMarker = null; }
+    if (orbitLine) { map.removeLayer(orbitLine); orbitLine = null; }
+    positionPanel.style.display = 'none';
+    passesPanel.style.display = 'none';
+  }
+})();
+</script>
+</body>
+</html>
