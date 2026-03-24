@@ -88,8 +88,8 @@ export async function getTleByCatalogNumber(noradId) {
   }
 }
 
-export async function getTleByCountry(countryCode) {
-  const cacheKey = `country:${countryCode}`;
+export async function getTleByName(name) {
+  const cacheKey = `name:${name}`;
   const cached = cache.get(cacheKey);
   const now = Date.now();
 
@@ -98,7 +98,7 @@ export async function getTleByCountry(countryCode) {
   }
 
   try {
-    const url = `https://celestrak.org/NORAD/elements/gp.php?COUNTRY=${countryCode}&FORMAT=tle`;
+    const url = `https://celestrak.org/NORAD/elements/gp.php?NAME=${encodeURIComponent(name)}&FORMAT=tle`;
     const text = await fetchTle(url);
     const data = parseTleText(text);
     cache.set(cacheKey, { data, timestamp: now });

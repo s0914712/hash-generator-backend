@@ -100,7 +100,7 @@
     <div class="controls">
       <select id="sourceType">
         <option value="group">By Group</option>
-        <option value="country">By Country</option>
+        <option value="series">By Series</option>
       </select>
       <select id="groupSelect">
         <option value="stations">Space Stations</option>
@@ -110,22 +110,42 @@
         <option value="galileo">Galileo</option>
         <option value="active">All Active</option>
       </select>
-      <select id="countrySelect" style="display:none;">
-        <option value="US">United States</option>
-        <option value="PRC">China</option>
-        <option value="CIS">Russia/CIS</option>
-        <option value="JPN">Japan</option>
-        <option value="IND">India</option>
-        <option value="ESA">ESA</option>
-        <option value="FR">France</option>
-        <option value="DE">Germany</option>
-        <option value="UK">United Kingdom</option>
-        <option value="CA">Canada</option>
-        <option value="KR">South Korea</option>
-        <option value="TW">Taiwan</option>
-        <option value="IL">Israel</option>
-        <option value="BR">Brazil</option>
-        <option value="AU">Australia</option>
+      <select id="seriesSelect" style="display:none;">
+        <optgroup label="🇨🇳 China">
+          <option value="YAOGAN">遥感 YAOGAN (Remote Sensing)</option>
+          <option value="GAOFEN">高分 GAOFEN (High Resolution)</option>
+          <option value="BEIDOU">北斗 BEIDOU (Navigation)</option>
+          <option value="FENGYUN">风云 FENGYUN (Weather)</option>
+          <option value="TIANGONG">天宫 TIANGONG (Space Station)</option>
+          <option value="SHENZHOU">神舟 SHENZHOU (Crewed)</option>
+          <option value="TIANZHOU">天舟 TIANZHOU (Cargo)</option>
+          <option value="ZHONGXING">中星 ZHONGXING (Comms)</option>
+          <option value="SHIYAN">实验 SHIYAN (Experimental)</option>
+          <option value="SHIJIAN">实践 SHIJIAN (Practice)</option>
+        </optgroup>
+        <optgroup label="🇯🇵 Japan">
+          <option value="HIMAWARI">ひまわり HIMAWARI (Weather)</option>
+          <option value="MICHIBIKI">みちびき MICHIBIKI (Nav)</option>
+          <option value="ALOS">ALOS (Earth Obs)</option>
+        </optgroup>
+        <optgroup label="🇺🇸 USA">
+          <option value="GOES">GOES (Weather)</option>
+          <option value="LANDSAT">Landsat (Earth Obs)</option>
+          <option value="NOAA">NOAA (Weather)</option>
+          <option value="TDRS">TDRS (Relay)</option>
+        </optgroup>
+        <optgroup label="🇮🇳 India">
+          <option value="CARTOSAT">Cartosat (Earth Obs)</option>
+          <option value="INSAT">INSAT (Comms)</option>
+        </optgroup>
+        <optgroup label="🇷🇺 Russia">
+          <option value="COSMOS">Cosmos</option>
+        </optgroup>
+        <optgroup label="🌍 International">
+          <option value="STARLINK">Starlink (Internet)</option>
+          <option value="ONEWEB">OneWeb (Internet)</option>
+          <option value="IRIDIUM">Iridium (Comms)</option>
+        </optgroup>
       </select>
       <input type="text" id="searchInput" placeholder="Search name...">
       <button id="loadBtn">Load</button>
@@ -189,7 +209,7 @@ if (typeof Globe === 'undefined') {
   // --- DOM refs ---
   var sourceType = document.getElementById('sourceType');
   var groupSelect = document.getElementById('groupSelect');
-  var countrySelect = document.getElementById('countrySelect');
+  var seriesSelect = document.getElementById('seriesSelect');
   var searchInput = document.getElementById('searchInput');
   var loadBtn = document.getElementById('loadBtn');
   var trackBtn = document.getElementById('trackBtn');
@@ -266,9 +286,9 @@ if (typeof Globe === 'undefined') {
 
   // --- Source type toggle ---
   function syncSourceType() {
-    var isCountry = sourceType.value === 'country';
-    groupSelect.style.display = isCountry ? 'none' : '';
-    countrySelect.style.display = isCountry ? '' : 'none';
+    var isSeries = sourceType.value === 'series';
+    groupSelect.style.display = isSeries ? 'none' : '';
+    seriesSelect.style.display = isSeries ? '' : 'none';
   }
   sourceType.addEventListener('change', syncSourceType);
   syncSourceType(); // sync on page load
@@ -306,8 +326,8 @@ if (typeof Globe === 'undefined') {
     satList.innerHTML = '<div class="loading">Loading satellites...</div>';
 
     var url = '/satellites?';
-    if (sourceType.value === 'country') {
-      url += 'country=' + countrySelect.value;
+    if (sourceType.value === 'series') {
+      url += 'series=' + seriesSelect.value;
     } else {
       url += 'group=' + groupSelect.value;
     }
