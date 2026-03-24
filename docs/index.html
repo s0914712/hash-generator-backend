@@ -170,7 +170,13 @@
     <div id="loadingMsg">Loading 3D Globe...</div>
   </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/globe.gl@2.33.3/dist/globe.gl.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/globe.gl@2.45.1/dist/globe.gl.min.js"></script>
+<script>
+if (typeof Globe === 'undefined') {
+  // Fallback to unpkg if jsdelivr fails
+  document.write('<script src="https://unpkg.com/globe.gl@2.45.1/dist/globe.gl.min.js"><\/script>');
+}
+</script>
 <script>
 if (typeof Globe === 'undefined') {
   document.getElementById('loadingMsg').innerHTML = 'Globe.gl failed to load.<br>Try refreshing or clearing cache.';
@@ -205,9 +211,9 @@ if (typeof Globe === 'undefined') {
   if (typeof Globe === 'undefined') return;
 
   var globe = Globe()
-    .globeImageUrl('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg')
-    .bumpImageUrl('https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png')
-    .backgroundImageUrl('https://cdn.jsdelivr.net/npm/three-globe/example/img/night-sky.png')
+    .globeImageUrl('https://cdn.jsdelivr.net/npm/three-globe@2.45.1/example/img/earth-blue-marble.jpg')
+    .bumpImageUrl('https://cdn.jsdelivr.net/npm/three-globe@2.45.1/example/img/earth-topology.png')
+    .backgroundImageUrl('https://cdn.jsdelivr.net/npm/three-globe@2.45.1/example/img/night-sky.png')
     .atmosphereColor('#3a86ff')
     .atmosphereAltitude(0.15)
     .showGraticules(true)
