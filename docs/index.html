@@ -82,6 +82,30 @@
     .status-bar { font-size: 0.75rem; color: #666; padding: 3px 0; }
     .loading { color: #888; text-align: center; padding: 14px; }
 
+    /* Satellite markers on globe */
+    .sat-marker {
+      font-size: 16px; cursor: pointer; text-align: center; line-height: 1;
+      filter: drop-shadow(0 0 4px rgba(126,184,255,0.8));
+      transition: transform 0.2s;
+      pointer-events: auto;
+    }
+    .sat-marker:hover { transform: scale(1.6); }
+    .sat-marker .sat-label {
+      font-size: 8px; color: #7eb8ff; white-space: nowrap;
+      text-shadow: 0 0 3px #000, 0 0 6px #000;
+      margin-top: -2px;
+    }
+    .sat-marker.selected {
+      font-size: 22px;
+      filter: drop-shadow(0 0 10px rgba(0,255,136,0.9));
+      animation: sat-pulse 1.5s ease-in-out infinite;
+    }
+    .sat-marker.selected .sat-label { color: #00ff88; font-size: 9px; }
+    @keyframes sat-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.4); }
+    }
+
     @media (max-width: 768px) {
       .sidebar { width: 100%; height: 40vh; top: auto; bottom: 0; padding-top: 10px;
         border-left: none; border-top: 1px solid #2a2f5e; }
@@ -245,14 +269,18 @@ if (typeof Globe === 'undefined') {
     .labelSize('size')
     .labelDotRadius(0.5)
     .labelAltitude(0.01)
-    // Satellite points (using pointsData)
-    .pointsData([])
-    .pointLat('lat')
-    .pointLng('lng')
-    .pointAltitude(function(d) { return d.alt / 6371; })
-    .pointRadius(function(d) { return d.isSelected ? 0.7 : 0.35; })
-    .pointColor(function(d) { return d.isSelected ? '#00ff88' : '#7eb8ff'; })
-    .pointsMerge(false)
+    // Satellite markers (HTML elements at orbital altitude)
+    .htmlElementsData([])
+    .htmlLat('lat')
+    .htmlLng('lng')
+    .htmlAltitude(function(d) { return d.alt / 6371; })
+    .htmlElement(function(d) {
+      var el = document.createElement('div');
+      el.className = d.isSelected ? 'sat-marker selected' : 'sat-marker';
+      el.innerHTML = '🛰️<div class="sat-label">' + d.name.substring(0, 12) + '</div>';
+      el.title = d.name + ' (' + d.alt.toFixed(0) + ' km)';
+      return el;
+    })
     // Orbit paths
     .pathsData([])
     .pathPointLat(function(p) { return p[0]; })
@@ -352,7 +380,7 @@ if (typeof Globe === 'undefined') {
   function loadAllPositions() {
     var batch = satellites.slice(0, 50);
     satPositions = [];
-    globe.pointsData([]);
+    globe.htmlElementsData([]);
     var minAlt = parseInt(altMin.value);
     var maxAlt = parseInt(altMax.value);
     var loaded = 0;
@@ -373,12 +401,12 @@ if (typeof Globe === 'undefined') {
       }).catch(function() {}).finally(function() {
         loaded++;
         if (loaded === batch.length) {
-          globe.pointsData(satPositions);
+          globe.htmlElementsData(satPositions);
         }
       });
     });
 
-    if (batch.length === 0) globe.pointsData([]);
+    if (batch.length === 0) globe.htmlElementsData([]);
   }
 
   // Apply altitude filter
@@ -461,7 +489,7 @@ if (typeof Globe === 'undefined') {
         }
       }
       if (!found) satPositions.push(entry);
-      globe.pointsData(satPositions.slice());
+      globe.htmlElementsData(satPositions.slice());
 
       // Smooth camera pan
       globe.pointOfView({ lat: pos.latitude, lng: pos.longitude, altitude: 2.0 }, 1000);
