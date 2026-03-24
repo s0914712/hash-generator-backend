@@ -25,22 +25,34 @@ export const SATELLITE_GROUPS = {
 
 export const DEFAULT_GROUP = 'stations';
 
-// Country codes supported by CelesTrak
-export const COUNTRY_CODES = {
-  'US': 'United States',
-  'PRC': 'China',
-  'CIS': 'Russia/CIS',
-  'JPN': 'Japan',
-  'IND': 'India',
-  'ESA': 'ESA',
-  'IT': 'Italy',
-  'FR': 'France',
-  'DE': 'Germany',
-  'UK': 'United Kingdom',
-  'CA': 'Canada',
-  'KR': 'South Korea',
-  'TW': 'Taiwan',
-  'IL': 'Israel',
-  'BR': 'Brazil',
-  'AU': 'Australia',
+// Satellite series searchable via CelesTrak NAME parameter
+export const SATELLITE_SERIES = {
+  // China
+  'YAOGAN': '遥感 (Remote Sensing)',
+  'GAOFEN': '高分 (High Resolution)',
+  'BEIDOU': '北斗 (Navigation)',
+  'FENGYUN': '风云 (Weather)',
+  'TIANGONG': '天宫 (Space Station)',
+  'SHENZHOU': '神舟 (Crewed)',
+  'TIANZHOU': '天舟 (Cargo)',
+  'ZHONGXING': '中星 (Communications)',
+  'SHIYAN': '实验 (Experimental)',
+  'SHIJIAN': '实践 (Practice)',
+  // Japan
+  'HIMAWARI': 'ひまわり (Weather)',
+  'MICHIBIKI': 'みちびき (Navigation)',
+  'ALOS': 'ALOS (Earth Obs)',
+  // USA
+  'GOES': 'GOES (Weather)',
+  'LANDSAT': 'Landsat (Earth Obs)',
+  'NOAA': 'NOAA (Weather)',
+  'TDRS': 'TDRS (Relay)',
+  // India
+  'CARTOSAT': 'Cartosat (Earth Obs)',
+  'INSAT': 'INSAT (Communications)',
+  // International
+  'STARLINK': 'Starlink (Internet)',
+  'ONEWEB': 'OneWeb (Internet)',
+  'IRIDIUM': 'Iridium (Communications)',
+  'COSMOS': 'Cosmos (Russia)',
 };
