@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Satellite Command - Taiwan</title>
+  <style>
+    :root {
+      --bg: #000000;
+      --glass: rgba(8, 16, 32, 0.65);
+      --glass-border: rgba(0, 229, 255, 0.12);
+      --cyan: #00e5ff;
+      --green: #00ff88;
+      --red: #ff4444;
+      --text: #d0dce8;
+      --muted: #5a7a99;
+      --mono: 'Courier New', 'Menlo', monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; overflow: hidden; }
+
+    #globeViz { width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; }
+
+    /* --- GLASSMORPHISM --- */
+    .glass {
+      background: var(--glass);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    /* --- TOP LEFT: Title + Clock --- */
+    .hud-top-left {
+      position: fixed; top: 16px; left: 16px; z-index: 10;
+      padding: 14px 20px;
+    }
+    .hud-title {
+      font-size: 1.1rem; font-weight: 700; color: var(--cyan); letter-spacing: 1px;
+      text-shadow: 0 0 15px rgba(0,229,255,0.4);
+    }
+    .hud-subtitle { font-size: 0.65rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+    .hud-clock { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); margin-top: 6px; }
+    .hud-clock .utc-time { color: var(--cyan); }
+    .hud-badge {
+      display: inline-block; background: rgba(0,229,255,0.12); border: 1px solid rgba(0,229,255,0.25);
+      border-radius: 20px; padding: 2px 10px; font-size: 0.68rem; color: var(--cyan); margin-top: 6px;
+    }
+    .hud-badge .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); margin-right: 5px; animation: blink 2s infinite; }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* --- TOP RIGHT: Selector --- */
+    .hud-top-right {
+      position: fixed; top: 16px; right: 16px; z-index: 10;
+      padding: 10px 14px; display: flex; gap: 6px; align-items: center;
+    }
+    .hud-top-right select, .hud-top-right button {
+      background: rgba(0,229,255,0.08); border: 1px solid rgba(0,229,255,0.2);
+      color: var(--cyan); padding: 5px 10px; border-radius: 8px; font-size: 0.75rem; cursor: pointer;
+    }
+    .hud-top-right select:focus { outline: none; border-color: var(--cyan); }
+    .hud-top-right button { font-weight: 600; }
+    .hud-top-right button:hover { background: rgba(0,229,255,0.2); }
+    .hud-top-right a {
+      color: var(--muted); text-decoration: none; font-size: 0.7rem; border: 1px solid rgba(255,255,255,0.1);
+      padding: 4px 8px; border-radius: 6px;
+    }
+    .hud-top-right a:hover { color: var(--cyan); border-color: rgba(0,229,255,0.3); }
+
+    /* --- BOTTOM LEFT: Pass Summary --- */
+    .hud-bottom-left {
+      position: fixed; bottom: 80px; left: 16px; z-index: 10;
+      padding: 14px 18px; min-width: 220px;
+    }
+    .summary-head { font-size: 0.7rem; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+    .summary-day { margin-bottom: 8px; }
+    .summary-day-title { font-size: 0.78rem; color: var(--text); display: flex; justify-content: space-between; }
+    .summary-day-title .num { color: var(--cyan); font-weight: 700; font-family: var(--mono); }
+    .summary-row { display: flex; justify-content: space-between; font-size: 0.68rem; padding: 1px 0; }
+    .summary-row .lbl { color: var(--muted); }
+    .summary-row .val { color: var(--text); font-family: var(--mono); }
+    .summary-divider { border: none; border-top: 1px solid rgba(0,229,255,0.08); margin: 6px 0; }
+
+    /* --- BOTTOM RIGHT: Satellite Info --- */
+    .hud-bottom-right {
+      position: fixed; bottom: 80px; right: 16px; z-index: 10;
+      padding: 14px 18px; min-width: 240px; display: none;
+    }
+    .info-name { font-size: 0.95rem; font-weight: 700; color: var(--green); margin-bottom: 8px;
+      text-shadow: 0 0 12px rgba(0,255,136,0.3); }
+    .info-row { display: flex; justify-content: space-between; padding: 2px 0; font-size: 0.75rem; }
+    .info-row .lbl { color: var(--muted); }
+    .info-row .val { color: #fff; font-family: var(--mono); font-weight: 500; }
+    .info-passes-title { font-size: 0.7rem; color: var(--muted); margin-top: 8px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
+    .info-pass { font-size: 0.68rem; color: var(--text); padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .info-pass .pt { color: var(--cyan); }
+
+    /* --- BOTTOM CENTER: Satellite Chips --- */
+    .hud-bottom-center {
+      position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 10;
+      padding: 8px 14px; max-width: 90vw;
+      display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none;
+    }
+    .hud-bottom-center::-webkit-scrollbar { display: none; }
+    .sat-chip {
+      flex-shrink: 0; padding: 4px 12px; border-radius: 20px;
+      background: rgba(0,229,255,0.06); border: 1px solid rgba(0,229,255,0.2);
+      color: var(--cyan); font-size: 0.68rem; cursor: pointer;
+      transition: all 0.25s; white-space: nowrap; font-family: var(--mono);
+    }
+    .sat-chip:hover { background: rgba(0,229,255,0.18); border-color: rgba(0,229,255,0.5);
+      box-shadow: 0 0 14px rgba(0,229,255,0.2); }
+    .sat-chip.active { background: rgba(0,255,136,0.15); border-color: var(--green); color: var(--green);
+      box-shadow: 0 0 16px rgba(0,255,136,0.25); }
+
+    /* --- CENTER: Loading --- */
+    .loading-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 20;
+      display: flex; align-items: center; justify-content: center; background: #000;
+    }
+    .loading-text { color: var(--cyan); font-size: 0.9rem; font-family: var(--mono); letter-spacing: 3px;
+      text-shadow: 0 0 20px rgba(0,229,255,0.5); animation: loadPulse 1.5s ease-in-out infinite; }
+    @keyframes loadPulse { 0%,100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+    /* --- ANIMATIONS --- */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+
+    /* --- RESPONSIVE --- */
+    @media (max-width: 768px) {
+      .hud-bottom-left { bottom: 70px; left: 8px; padding: 10px 14px; min-width: 180px; }
+      .hud-bottom-right { bottom: 70px; right: 8px; padding: 10px 14px; min-width: 180px; }
+      .hud-top-left { top: 8px; left: 8px; padding: 10px 14px; }
+      .hud-top-right { top: 8px; right: 8px; padding: 6px 10px; }
+      .hud-bottom-center { bottom: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-text">INITIALIZING SATELLITE COMMAND</div>
+</div>
+
+<!-- Globe -->
+<div id="globeViz"></div>
+
+<!-- HUD: Top Left -->
+<div class="glass hud-top-left fade-in">
+  <div class="hud-title">SATELLITE COMMAND</div>
+  <div class="hud-subtitle">Taiwan Ground Station</div>
+  <div class="hud-clock"><span class="utc-time" id="clockUTC">--:--:--</span> UTC</div>
+  <div class="hud-badge"><span class="dot"></span><span id="satCount">0</span> tracked</div>
+</div>
+
+<!-- HUD: Top Right -->
+<div class="glass hud-top-right fade-in">
+  <select id="srcType">
+    <option value="group">GROUP</option>
+    <option value="series">SERIES</option>
+  </select>
+  <select id="grpSel">
+    <option value="stations">Stations</option>
+    <option value="weather">Weather</option>
+    <option value="starlink">Starlink</option>
+    <option value="gps-ops">GPS</option>
+    <option value="galileo">Galileo</option>
+    <option value="active">Active</option>
+  </select>
+  <select id="serSel" style="display:none;">
+    <optgroup label="China">
+      <option value="YAOGAN">YAOGAN</option>
+      <option value="GAOFEN">GAOFEN</option>
+      <option value="BEIDOU">BEIDOU</option>
+      <option value="FENGYUN">FENGYUN</option>
+      <option value="TIANGONG">TIANGONG</option>
+    </optgroup>
+    <optgroup label="Japan">
+      <option value="HIMAWARI">HIMAWARI</option>
+      <option value="MICHIBIKI">MICHIBIKI</option>
+    </optgroup>
+    <optgroup label="USA">
+      <option value="GOES">GOES</option>
+      <option value="NOAA">NOAA</option>
+      <option value="TDRS">TDRS</option>
+    </optgroup>
+    <optgroup label="International">
+      <option value="STARLINK">STARLINK</option>
+      <option value="IRIDIUM">IRIDIUM</option>
+      <option value="COSMOS">COSMOS</option>
+    </optgroup>
+  </select>
+  <button id="loadBtn">LOAD</button>
+  <a href="index.html">Dashboard</a>
+</div>
+
+<!-- HUD: Bottom Left — Pass Summary -->
+<div class="glass hud-bottom-left fade-in">
+  <div class="summary-head">Passes over Taiwan</div>
+  <div id="summaryContent"><div style="color:var(--muted);font-size:0.7rem;">Loading...</div></div>
+</div>
+
+<!-- HUD: Bottom Right — Satellite Info -->
+<div class="glass hud-bottom-right fade-in" id="infoPanel">
+  <div class="info-name" id="infoName">—</div>
+  <div class="info-row"><span class="lbl">LAT</span><span class="val" id="infoLat">—</span></div>
+  <div class="info-row"><span class="lbl">LNG</span><span class="val" id="infoLng">—</span></div>
+  <div class="info-row"><span class="lbl">ALT</span><span class="val" id="infoAlt">—</span></div>
+  <div class="info-row"><span class="lbl">VEL</span><span class="val" id="infoVel">—</span></div>
+  <div class="info-row"><span class="lbl">TIME</span><span class="val" id="infoTime">—</span></div>
+  <div class="info-passes-title">Next Passes</div>
+  <div id="infoPasses"><div style="color:var(--muted);font-size:0.68rem;">—</div></div>
+</div>
+
+<!-- HUD: Bottom Center — Satellite Chips -->
+<div class="glass hud-bottom-center" id="chipBar" style="display:none;"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/globe.gl@2.45.1/dist/globe.gl.min.js"></script>
+<script>
+if (typeof Globe === 'undefined') {
+  document.write('<script src="https://unpkg.com/globe.gl@2.45.1/dist/globe.gl.min.js"><\/script>');
+}
+</script>
+<script>
+(function() {
+  if (typeof Globe === 'undefined') {
+    document.getElementById('loadingOverlay').innerHTML = '<div class="loading-text">GLOBE ENGINE FAILED</div>';
+    return;
+  }
+
+  var API = 'https://hash-generator-backend-ten.vercel.app';
+  var CDN = 'https://cdn.jsdelivr.net/npm/three-globe@2.45.1/example/img/';
+
+  // --- GLOBE ---
+  var globe = Globe()
+    .globeImageUrl(CDN + 'earth-night.jpg')
+    .bumpImageUrl(CDN + 'earth-topology.png')
+    .backgroundImageUrl(CDN + 'night-sky.png')
+    .atmosphereColor('#00e5ff')
+    .atmosphereAltitude(0.2)
+    .showGraticules(false)
+    .pointOfView({ lat: 23.5, lng: 121, altitude: 2.5 })
+    // Taiwan
+    .labelsData([{ lat: 23.5, lng: 121, text: 'TAIWAN', color: '#ff4444', size: 1.8 }])
+    .labelText('text').labelColor('color').labelSize('size').labelDotRadius(0.6).labelAltitude(0.015)
+    .labelResolution(3)
+    // Satellites
+    .pointsData([])
+    .pointLat('lat').pointLng('lng')
+    .pointAltitude(function(d) { return d.alt / 6371; })
+    .pointRadius(function(d) { return d.sel ? 0.55 : 0.18; })
+    .pointColor(function(d) { return d.sel ? '#00ff88' : '#00e5ff'; })
+    .pointsMerge(true)
+    // Orbit
+    .pathsData([])
+    .pathPointLat(function(p) { return p[0]; })
+    .pathPointLng(function(p) { return p[1]; })
+    .pathColor(function() { return ['rgba(0,229,255,0.55)', 'rgba(0,229,255,0.08)']; })
+    .pathStroke(2)
+    .pathDashLength(0.01).pathDashGap(0.004).pathDashAnimateTime(40000)
+    // Taiwan ring
+    .ringsData([{ lat: 23.5, lng: 121 }])
+    .ringColor(function() { return 'rgba(255,68,68,0.5)'; })
+    .ringMaxRadius(4).ringPropagationSpeed(2).ringRepeatPeriod(1200)
+    (document.getElementById('globeViz'));
+
+  // Resize
+  function resize() { globe.width(window.innerWidth); globe.height(window.innerHeight); }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // Hide loading
+  setTimeout(function() {
+    var o = document.getElementById('loadingOverlay');
+    o.style.transition = 'opacity 1s'; o.style.opacity = '0';
+    setTimeout(function() { o.style.display = 'none'; }, 1000);
+  }, 2500);
+
+  // --- AUTO ROTATION ---
+  var autoRotate = true;
+  var lastInteraction = 0;
+  var rotationSpeed = 0.08;
+
+  function onInteraction() { lastInteraction = Date.now(); autoRotate = false; }
+  var el = document.getElementById('globeViz');
+  el.addEventListener('mousedown', onInteraction);
+  el.addEventListener('touchstart', onInteraction);
+  el.addEventListener('wheel', onInteraction);
+
+  (function rotateLoop() {
+    if (!autoRotate && Date.now() - lastInteraction > 6000) autoRotate = true;
+    if (autoRotate) {
+      var pov = globe.pointOfView();
+      globe.pointOfView({ lat: pov.lat, lng: pov.lng + rotationSpeed, altitude: pov.altitude });
+    }
+    requestAnimationFrame(rotateLoop);
+  })();
+
+  // --- CLOCK ---
+  setInterval(function() {
+    var d = new Date();
+    document.getElementById('clockUTC').textContent =
+      ('0'+d.getUTCHours()).slice(-2) + ':' + ('0'+d.getUTCMinutes()).slice(-2) + ':' + ('0'+d.getUTCSeconds()).slice(-2);
+  }, 1000);
+
+  // --- DOM ---
+  var srcType = document.getElementById('srcType');
+  var grpSel = document.getElementById('grpSel');
+  var serSel = document.getElementById('serSel');
+  var loadBtn = document.getElementById('loadBtn');
+  var chipBar = document.getElementById('chipBar');
+  var infoPanel = document.getElementById('infoPanel');
+
+  srcType.addEventListener('change', function() {
+    var isSer = srcType.value === 'series';
+    grpSel.style.display = isSer ? 'none' : '';
+    serSel.style.display = isSer ? '' : 'none';
+  });
+
+  // --- STATE ---
+  var sats = [];
+  var satPts = [];
+  var selected = null;
+  var trackTimer = null;
+
+  function api(path) {
+    return fetch(API + path).then(function(r) {
+      if (!r.ok) throw new Error(r.status);
+      return r.json();
+    });
+  }
+
+  // --- LOAD ---
+  loadBtn.addEventListener('click', function() {
+    loadBtn.textContent = '...';
+    var url = '/satellites?';
+    url += srcType.value === 'series' ? 'series=' + serSel.value : 'group=' + grpSel.value;
+
+    api(url).then(function(data) {
+      sats = data.satellites;
+      document.getElementById('satCount').textContent = sats.length;
+      renderChips();
+      loadPositions();
+    }).catch(function() {
+      document.getElementById('satCount').textContent = 'ERR';
+    }).finally(function() { loadBtn.textContent = 'LOAD'; });
+  });
+
+  function renderChips() {
+    chipBar.style.display = 'flex';
+    chipBar.innerHTML = '';
+    sats.forEach(function(s) {
+      var c = document.createElement('div');
+      c.className = 'sat-chip' + (selected && selected.noradId === s.noradId ? ' active' : '');
+      c.textContent = s.name.length > 18 ? s.name.substring(0, 18) + '..' : s.name;
+      c.addEventListener('click', function() { selectSat(s); });
+      chipBar.appendChild(c);
+    });
+  }
+
+  function loadPositions() {
+    satPts = [];
+    globe.pointsData([]);
+    var batch = sats.slice(0, 30);
+    var done = 0;
+    batch.forEach(function(s) {
+      api('/satellites/' + s.noradId + '/position').then(function(d) {
+        satPts.push({ lat: d.position.latitude, lng: d.position.longitude, alt: d.position.altitude,
+          id: s.noradId, sel: selected && selected.noradId === s.noradId });
+      }).catch(function(){}).finally(function() {
+        done++;
+        if (done === batch.length) globe.pointsData(satPts);
+      });
+    });
+  }
+
+  // --- SELECT & TRACK ---
+  function selectSat(s) {
+    selected = s;
+    if (trackTimer) clearInterval(trackTimer);
+    renderChips();
+
+    infoPanel.style.display = 'block';
+    document.getElementById('infoName').textContent = s.name;
+
+    // First position + pan
+    updatePos(s.noradId, true);
+
+    // Orbit
+    api('/satellites/' + s.noradId + '/orbit?duration=90&step=1').then(function(d) {
+      globe.pathsData([d.path.map(function(p) { return [p.latitude, p.longitude]; })]);
+    }).catch(function() {});
+
+    // Passes
+    api('/satellites/' + s.noradId + '/passes?hours=24').then(function(d) {
+      var html = '';
+      if (!d.passes || d.passes.length === 0) {
+        html = '<div style="color:var(--muted);font-size:0.68rem;">No passes in 24h</div>';
+      } else {
+        d.passes.slice(0, 3).forEach(function(p) {
+          html += '<div class="info-pass"><span class="pt">' +
+            new Date(p.startTime).toLocaleTimeString('zh-TW') + '</span> — ' +
+            new Date(p.endTime).toLocaleTimeString('zh-TW') +
+            ' | ' + p.maxElevation + '°</div>';
+        });
+      }
+      document.getElementById('infoPasses').innerHTML = html;
+    }).catch(function() {});
+
+    // Auto-refresh data only
+    trackTimer = setInterval(function() { updatePos(s.noradId, false); }, 5000);
+  }
+
+  function updatePos(id, pan) {
+    api('/satellites/' + id + '/position').then(function(d) {
+      var p = d.position;
+      document.getElementById('infoLat').textContent = p.latitude.toFixed(4) + '\u00B0';
+      document.getElementById('infoLng').textContent = p.longitude.toFixed(4) + '\u00B0';
+      document.getElementById('infoAlt').textContent = p.altitude.toFixed(1) + ' km';
+      document.getElementById('infoVel').textContent = p.velocity.toFixed(2) + ' km/s';
+      document.getElementById('infoTime').textContent = new Date(p.timestamp).toLocaleTimeString();
+
+      // Update point
+      var found = false;
+      for (var i = 0; i < satPts.length; i++) {
+        satPts[i].sel = satPts[i].id == id;
+        if (satPts[i].id == id) {
+          satPts[i].lat = p.latitude; satPts[i].lng = p.longitude; satPts[i].alt = p.altitude;
+          found = true;
+        }
+      }
+      if (!found) satPts.push({ lat: p.latitude, lng: p.longitude, alt: p.altitude, id: id, sel: true });
+      globe.pointsData(satPts.slice());
+
+      if (pan) {
+        autoRotate = false; lastInteraction = Date.now();
+        globe.pointOfView({ lat: p.latitude, lng: p.longitude, altitude: 1.8 }, 1500);
+      }
+    }).catch(function() {});
+  }
+
+  // --- PASS SUMMARY ---
+  api('/satellites/pass-summary').then(function(d) {
+    var html = '';
+    [{ label: 'Today', data: d.today }, { label: 'Tomorrow', data: d.tomorrow }].forEach(function(sec, i) {
+      if (i > 0) html += '<hr class="summary-divider">';
+      html += '<div class="summary-day">';
+      html += '<div class="summary-day-title"><span>' + sec.label + ' ' + sec.data.date + '</span><span class="num">' + sec.data.satellitesWithPasses + '</span></div>';
+      var entries = Object.entries(sec.data.byCountry).sort(function(a,b) { return b[1]-a[1]; });
+      entries.forEach(function(e) {
+        html += '<div class="summary-row"><span class="lbl">' + e[0] + '</span><span class="val">' + e[1] + '</span></div>';
+      });
+      html += '</div>';
+    });
+    document.getElementById('summaryContent').innerHTML = html;
+  }).catch(function() {
+    document.getElementById('summaryContent').innerHTML = '<div style="color:var(--muted);font-size:0.7rem;">Unavailable</div>';
+  });
+
+  // Auto-load stations on start
+  loadBtn.click();
+})();
+</script>
+</body>
+</html>
