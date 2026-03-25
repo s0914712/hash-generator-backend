@@ -117,3 +117,39 @@ export function getPasses(tleLine1, tleLine2, startDate = new Date(), durationHo
 
   return passes;
 }
+
+// Quick pass count — uses larger step (5 min) for speed
+export function countPasses(tleLine1, tleLine2, startDate, durationHours = 24, minElevation = MIN_ELEVATION_DEG) {
+  try {
+    const satrec = twoline2satrec(tleLine1, tleLine2);
+    const observerGd = {
+      latitude: TAIWAN.latitudeRad,
+      longitude: TAIWAN.longitudeRad,
+      height: TAIWAN.height,
+    };
+
+    const endTime = startDate.getTime() + durationHours * 3600 * 1000;
+    let passCount = 0;
+    let inPass = false;
+
+    for (let t = startDate.getTime(); t <= endTime; t += 300 * 1000) {
+      const date = new Date(t);
+      const pv = propagate(satrec, date);
+      if (!pv.position || typeof pv.position === 'boolean') continue;
+
+      const gmst = gstime(date);
+      const ecf = eciToEcf(pv.position, gmst);
+      const lookAngles = ecfToLookAngles(observerGd, ecf);
+      const elevationDeg = lookAngles.elevation * RAD2DEG;
+
+      if (elevationDeg >= minElevation) {
+        if (!inPass) { inPass = true; passCount++; }
+      } else {
+        inPass = false;
+      }
+    }
+    return passCount;
+  } catch (e) {
+    return 0;
+  }
+}
