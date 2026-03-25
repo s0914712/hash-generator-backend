@@ -79,6 +79,21 @@
     .pass-item .pass-time { color: #7eb8ff; font-weight: 600; margin-bottom: 2px; }
     .pass-item .pass-detail { color: #aaa; }
 
+    .summary-section { margin-bottom: 8px; }
+    .summary-section .summary-title {
+      font-size: 0.82rem; color: #fff; font-weight: 600; margin-bottom: 4px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .summary-section .summary-title .count {
+      font-size: 1rem; color: #7eb8ff;
+    }
+    .summary-country {
+      display: flex; justify-content: space-between; padding: 2px 0; font-size: 0.75rem;
+    }
+    .summary-country .sc-label { color: #888; }
+    .summary-country .sc-val { color: #e0e0e0; font-weight: 500; }
+    .summary-divider { border: none; border-top: 1px solid #2a2f5e; margin: 6px 0; }
+
     .status-bar { font-size: 0.75rem; color: #666; padding: 3px 0; }
     .loading { color: #888; text-align: center; padding: 14px; }
 
@@ -197,6 +212,11 @@
     <h3>Upcoming Passes over Taiwan</h3>
     <div id="passesList"></div>
   </div>
+  <div id="summaryPanel" class="info-panel">
+    <h3>Passes over Taiwan</h3>
+    <div id="summaryContent" class="loading">Loading summary...</div>
+  </div>
+
   <h2>Satellites</h2>
   <div class="status-bar" id="statusBar">Select a source and click Load</div>
   <div id="satList"></div>
@@ -533,6 +553,33 @@ if (typeof Globe === 'undefined') {
     positionPanel.style.display = 'none';
     passesPanel.style.display = 'none';
   }
+
+  // --- DAILY PASS SUMMARY ---
+  function renderSummarySection(label, data) {
+    var html = '<div class="summary-section">';
+    html += '<div class="summary-title"><span>' + label + '</span><span class="count">' + data.satellitesWithPasses + ' satellites</span></div>';
+    // Sort countries by count descending
+    var entries = Object.entries(data.byCountry).sort(function(a, b) { return b[1] - a[1]; });
+    entries.forEach(function(e) {
+      html += '<div class="summary-country"><span class="sc-label">' + e[0] + '</span><span class="sc-val">' + e[1] + '</span></div>';
+    });
+    html += '</div>';
+    return html;
+  }
+
+  function loadSummary() {
+    api('/satellites/pass-summary').then(function(data) {
+      var html = renderSummarySection('Today (' + data.today.date + ')', data.today);
+      html += '<hr class="summary-divider">';
+      html += renderSummarySection('Tomorrow (' + data.tomorrow.date + ')', data.tomorrow);
+      html += '<div style="font-size:0.65rem;color:#555;margin-top:4px;">Sample: ' + data.sampleSize + ' active satellites</div>';
+      document.getElementById('summaryContent').innerHTML = html;
+    }).catch(function() {
+      document.getElementById('summaryContent').innerHTML = '<div style="font-size:0.75rem;color:#666;">Could not load summary</div>';
+    });
+  }
+
+  loadSummary();
 })();
 </script>
 </body>
