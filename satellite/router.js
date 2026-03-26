@@ -244,4 +244,9 @@ router.get('/:id/orbit', async (req, res) => {
   }
 });
 
+export function resetSummaryCache() {
+  summaryCache = null;
+  summaryCacheTime = 0;
+}
+
 export default router;
