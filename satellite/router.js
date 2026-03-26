@@ -58,7 +58,7 @@ router.get('/', async (req, res) => {
 // Country classification by satellite name patterns
 const COUNTRY_PATTERNS = [
   { label: 'USA', patterns: ['GPS', 'GOES', 'NOAA', 'TDRS', 'LANDSAT', 'STARLINK', 'IRIDIUM', 'ORBCOMM', 'GLOBALSTAR'] },
-  { label: 'China', patterns: ['YAOGAN', 'GAOFEN', 'BEIDOU', 'FENGYUN', 'TIANGONG', 'SHENZHOU', 'TIANZHOU', 'ZHONGXING', 'SHIYAN', 'SHIJIAN', 'CZ-'] },
+  { label: 'China', patterns: ['YAOGAN', 'GAOFEN', 'BEIDOU', 'FENGYUN', 'TIANGONG', 'SHENZHOU', 'TIANZHOU', 'ZHONGXING', 'SHIYAN', 'SHIJIAN', 'JILIN', 'YUNHAI', 'HAIYANG', 'TIANHUI', 'HUANJING', 'ZIYUAN', 'TIANTONG', 'CHUANGXIN', 'CZ-'] },
   { label: 'EU', patterns: ['GALILEO', 'METEOSAT', 'SENTINEL', 'ENVISAT', 'AEOLUS', 'SWARM'] },
   { label: 'Japan', patterns: ['HIMAWARI', 'MICHIBIKI', 'ALOS', 'QZS-'] },
   { label: 'Russia', patterns: ['COSMOS', 'GLONASS', 'METEOR', 'RESURS'] },
