@@ -58,7 +58,7 @@ router.get('/', async (req, res) => {
 // Country classification by satellite name patterns
 const COUNTRY_PATTERNS = [
   { label: 'USA', patterns: ['GPS', 'GOES', 'NOAA', 'TDRS', 'LANDSAT', 'STARLINK', 'IRIDIUM', 'ORBCOMM', 'GLOBALSTAR'] },
-  { label: 'China', patterns: ['YAOGAN', 'GAOFEN', 'BEIDOU', 'FENGYUN', 'TIANGONG', 'SHENZHOU', 'TIANZHOU', 'ZHONGXING', 'SHIYAN', 'SHIJIAN', 'CZ-'] },
+  { label: 'China', patterns: ['YAOGAN', 'GAOFEN', 'BEIDOU', 'FENGYUN', 'TIANGONG', 'SHENZHOU', 'TIANZHOU', 'ZHONGXING', 'SHIYAN', 'SHIJIAN', 'JILIN', 'YUNHAI', 'HAIYANG', 'TIANHUI', 'HUANJING', 'ZIYUAN', 'TIANTONG', 'CHUANGXIN', 'CZ-'] },
   { label: 'EU', patterns: ['GALILEO', 'METEOSAT', 'SENTINEL', 'ENVISAT', 'AEOLUS', 'SWARM'] },
   { label: 'Japan', patterns: ['HIMAWARI', 'MICHIBIKI', 'ALOS', 'QZS-'] },
   { label: 'Russia', patterns: ['COSMOS', 'GLONASS', 'METEOR', 'RESURS'] },
@@ -88,9 +88,29 @@ router.get('/pass-summary', async (req, res) => {
   }
 
   try {
-    // Use 'active' group for broad coverage (limited to first 100 for speed)
-    const satellites = await getTleByGroup('active');
-    const sample = satellites.slice(0, 100);
+    // Use 'active' group for broad coverage
+    // Also fetch Chinese satellites specifically to ensure China coverage
+    const [activeSats, chinaSats] = await Promise.all([
+      getTleByGroup('active'),
+      getTleByName('YAOGAN').catch(() => []),
+    ]);
+
+    // Evenly sample from active group (spread across the full list for country diversity)
+    const maxActive = 120;
+    const step = Math.max(1, Math.floor(activeSats.length / maxActive));
+    const sampled = [];
+    const seenNames = new Set();
+    for (let i = 0; i < activeSats.length && sampled.length < maxActive; i += step) {
+      sampled.push(activeSats[i]);
+      seenNames.add(activeSats[i].name);
+    }
+    // Add Chinese satellites not already in sample (up to 30)
+    let chinaAdded = 0;
+    for (const cs of chinaSats) {
+      if (chinaAdded >= 30) break;
+      if (!seenNames.has(cs.name)) { sampled.push(cs); seenNames.add(cs.name); chinaAdded++; }
+    }
+    const sample = sampled;
 
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
@@ -223,5 +243,10 @@ router.get('/:id/orbit', async (req, res) => {
     res.status(502).json({ error: 'Failed to fetch TLE data from CelesTrak' });
   }
 });
+
+export function resetSummaryCache() {
+  summaryCache = null;
+  summaryCacheTime = 0;
+}
 
 export default router;

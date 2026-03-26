@@ -170,11 +170,19 @@
   </select>
   <select id="serSel" style="display:none;">
     <optgroup label="China">
-      <option value="YAOGAN">YAOGAN</option>
-      <option value="GAOFEN">GAOFEN</option>
-      <option value="BEIDOU">BEIDOU</option>
-      <option value="FENGYUN">FENGYUN</option>
-      <option value="TIANGONG">TIANGONG</option>
+      <option value="YAOGAN">YAOGAN 遥感</option>
+      <option value="GAOFEN">GAOFEN 高分</option>
+      <option value="BEIDOU">BEIDOU 北斗</option>
+      <option value="FENGYUN">FENGYUN 风云</option>
+      <option value="TIANGONG">TIANGONG 天宫</option>
+      <option value="JILIN">JILIN 吉林</option>
+      <option value="YUNHAI">YUNHAI 云海</option>
+      <option value="HAIYANG">HAIYANG 海洋</option>
+      <option value="TIANHUI">TIANHUI 天绘</option>
+      <option value="HUANJING">HUANJING 环境</option>
+      <option value="ZIYUAN">ZIYUAN 资源</option>
+      <option value="TIANTONG">TIANTONG 天通</option>
+      <option value="CHUANGXIN">CHUANGXIN 创新</option>
     </optgroup>
     <optgroup label="Japan">
       <option value="HIMAWARI">HIMAWARI</option>
@@ -249,15 +257,17 @@ if (typeof Globe === 'undefined') {
     .pointsData([])
     .pointLat('lat').pointLng('lng')
     .pointAltitude(function(d) { return d.alt / 6371; })
-    .pointRadius(function(d) { return d.sel ? 0.55 : 0.18; })
+    .pointRadius(function(d) { return d.sel ? 0.55 : 0.25; })
     .pointColor(function(d) { return d.sel ? '#00ff88' : '#00e5ff'; })
-    .pointsMerge(true)
+    .pointsMerge(false)
+    .pointLabel(function(d) { return '<span style="color:#00e5ff;font-family:monospace;font-size:12px;background:rgba(0,0,0,0.7);padding:3px 8px;border-radius:4px;border:1px solid rgba(0,229,255,0.3);">' + (d.name || d.id) + '</span>'; })
+    .onPointClick(function(pt) { if (pt && pt.id) { var s = null; for (var i = 0; i < sats.length; i++) { if (sats[i].noradId == pt.id) { s = sats[i]; break; } } if (s) selectSat(s); } })
     // Orbit
     .pathsData([])
     .pathPointLat(function(p) { return p[0]; })
     .pathPointLng(function(p) { return p[1]; })
-    .pathColor(function() { return ['rgba(0,229,255,0.55)', 'rgba(0,229,255,0.08)']; })
-    .pathStroke(2)
+    .pathColor(function() { return ['rgba(0,229,255,0.25)', 'rgba(0,229,255,0.04)']; })
+    .pathStroke(1.5)
     .pathDashLength(0.01).pathDashGap(0.004).pathDashAnimateTime(40000)
     // Taiwan ring
     .ringsData([{ lat: 23.5, lng: 121 }])
@@ -367,7 +377,7 @@ if (typeof Globe === 'undefined') {
     batch.forEach(function(s) {
       api('/satellites/' + s.noradId + '/position').then(function(d) {
         satPts.push({ lat: d.position.latitude, lng: d.position.longitude, alt: d.position.altitude,
-          id: s.noradId, sel: selected && selected.noradId === s.noradId });
+          id: s.noradId, name: s.name, sel: selected && selected.noradId === s.noradId });
       }).catch(function(){}).finally(function() {
         done++;
         if (done === batch.length) globe.pointsData(satPts);
@@ -430,7 +440,7 @@ if (typeof Globe === 'undefined') {
           found = true;
         }
       }
-      if (!found) satPts.push({ lat: p.latitude, lng: p.longitude, alt: p.altitude, id: id, sel: true });
+      if (!found) satPts.push({ lat: p.latitude, lng: p.longitude, alt: p.altitude, id: id, name: selected ? selected.name : '', sel: true });
       globe.pointsData(satPts.slice());
 
       if (pan) {

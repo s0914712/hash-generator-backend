@@ -109,4 +109,31 @@ export async function getTleByName(name) {
   }
 }
 
+// Pre-warm cache for commonly used groups and Chinese satellite series
+const WARM_GROUPS = ['active', 'stations', 'weather', 'starlink', 'gps-ops', 'galileo'];
+const WARM_SERIES = ['YAOGAN', 'GAOFEN', 'BEIDOU', 'FENGYUN', 'JILIN', 'YUNHAI', 'HAIYANG', 'TIANHUI'];
+
+export async function warmCache() {
+  const results = { groups: 0, series: 0, errors: [] };
+
+  // Fetch groups in parallel
+  const groupJobs = WARM_GROUPS.map(g =>
+    getTleByGroup(g)
+      .then(d => { results.groups++; return { name: g, count: d.length }; })
+      .catch(e => { results.errors.push(`group:${g} - ${e.message}`); return null; })
+  );
+
+  // Fetch Chinese series in parallel
+  const seriesJobs = WARM_SERIES.map(s =>
+    getTleByName(s)
+      .then(d => { results.series++; return { name: s, count: d.length }; })
+      .catch(e => { results.errors.push(`series:${s} - ${e.message}`); return null; })
+  );
+
+  const all = await Promise.all([...groupJobs, ...seriesJobs]);
+  results.details = all.filter(Boolean);
+  results.cachedKeys = cache.size;
+  return results;
+}
+
 export { parseNoradId, parseIntlDesignator, parseEpoch };

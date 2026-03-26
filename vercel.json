@@ -11,5 +11,11 @@
       "src": "/(.*)",
       "dest": "index.js"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/update-tle",
+      "schedule": "0 */6 * * *"
+    }
   ]
 }
