@@ -88,10 +88,24 @@
       font-size: 1rem; color: #7eb8ff;
     }
     .summary-country {
-      display: flex; justify-content: space-between; padding: 2px 0; font-size: 0.75rem;
+      display: flex; justify-content: space-between; padding: 3px 0; font-size: 0.75rem;
+      cursor: pointer; border-radius: 4px; padding-left: 4px; padding-right: 4px;
+      transition: background 0.2s;
     }
+    .summary-country:hover { background: rgba(37,99,235,0.15); }
     .summary-country .sc-label { color: #888; }
+    .summary-country .sc-label .arrow { font-size: 0.6rem; margin-right: 3px; transition: transform 0.2s; display: inline-block; }
+    .summary-country .sc-label .arrow.open { transform: rotate(90deg); }
     .summary-country .sc-val { color: #e0e0e0; font-weight: 500; }
+    .summary-detail-list {
+      display: none; padding: 2px 0 4px 14px; font-size: 0.68rem;
+    }
+    .summary-detail-list.open { display: block; }
+    .summary-detail-item {
+      display: flex; justify-content: space-between; padding: 1px 0; color: #aaa;
+    }
+    .summary-detail-item .sd-name { color: #7eb8ff; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .summary-detail-item .sd-passes { color: #e0e0e0; font-weight: 500; }
     .summary-divider { border: none; border-top: 1px solid #2a2f5e; margin: 6px 0; }
 
     .status-bar { font-size: 0.75rem; color: #666; padding: 3px 0; }
@@ -564,13 +578,22 @@ if (typeof Globe === 'undefined') {
   }
 
   // --- DAILY PASS SUMMARY ---
+  var summaryIdCounter = 0;
   function renderSummarySection(label, data) {
     var html = '<div class="summary-section">';
     html += '<div class="summary-title"><span>' + label + '</span><span class="count">' + data.satellitesWithPasses + ' satellites</span></div>';
-    // Sort countries by count descending
     var entries = Object.entries(data.byCountry).sort(function(a, b) { return b[1] - a[1]; });
+    var details = data.detailsByCountry || {};
     entries.forEach(function(e) {
-      html += '<div class="summary-country"><span class="sc-label">' + e[0] + '</span><span class="sc-val">' + e[1] + '</span></div>';
+      var uid = 'sd-' + (summaryIdCounter++);
+      html += '<div class="summary-country" onclick="(function(){ var l=document.getElementById(\'' + uid + '\'); var a=document.getElementById(\'a-' + uid + '\'); if(l){l.classList.toggle(\'open\'); a.classList.toggle(\'open\');} })()"><span class="sc-label"><span class="arrow" id="a-' + uid + '">&#9654;</span>' + e[0] + '</span><span class="sc-val">' + e[1] + '</span></div>';
+      html += '<div class="summary-detail-list" id="' + uid + '">';
+      var sats = details[e[0]] || [];
+      sats.sort(function(a, b) { return b.passes - a.passes; });
+      sats.forEach(function(s) {
+        html += '<div class="summary-detail-item"><span class="sd-name" title="' + s.name + '">' + s.name + '</span><span class="sd-passes">' + s.passes + ' pass</span></div>';
+      });
+      html += '</div>';
     });
     html += '</div>';
     return html;

@@ -116,29 +116,34 @@ router.get('/pass-summary', async (req, res) => {
     todayStart.setHours(0, 0, 0, 0);
     const tomorrowStart = new Date(todayStart.getTime() + 24 * 3600 * 1000);
 
-    const today = { total: 0, byCountry: {} };
-    const tomorrow = { total: 0, byCountry: {} };
+    const today = { total: 0, byCountry: {}, detailsByCountry: {} };
+    const tomorrow = { total: 0, byCountry: {}, detailsByCountry: {} };
 
     for (const sat of sample) {
       const country = classifyCountry(sat.name);
+      const noradId = parseNoradId(sat.tleLine1);
       const todayPasses = countPasses(sat.tleLine1, sat.tleLine2, todayStart, 24);
       const tomorrowPasses = countPasses(sat.tleLine1, sat.tleLine2, tomorrowStart, 24);
 
       if (todayPasses > 0) {
         today.total++;
         today.byCountry[country] = (today.byCountry[country] || 0) + 1;
+        if (!today.detailsByCountry[country]) today.detailsByCountry[country] = [];
+        today.detailsByCountry[country].push({ name: sat.name, noradId, passes: todayPasses });
       }
       if (tomorrowPasses > 0) {
         tomorrow.total++;
         tomorrow.byCountry[country] = (tomorrow.byCountry[country] || 0) + 1;
+        if (!tomorrow.detailsByCountry[country]) tomorrow.detailsByCountry[country] = [];
+        tomorrow.detailsByCountry[country].push({ name: sat.name, noradId, passes: tomorrowPasses });
       }
     }
 
     const result = {
       observer: { latitude: TAIWAN.latitude, longitude: TAIWAN.longitude, location: 'Taiwan' },
       sampleSize: sample.length,
-      today: { date: todayStart.toISOString().slice(0, 10), satellitesWithPasses: today.total, byCountry: today.byCountry },
-      tomorrow: { date: tomorrowStart.toISOString().slice(0, 10), satellitesWithPasses: tomorrow.total, byCountry: tomorrow.byCountry },
+      today: { date: todayStart.toISOString().slice(0, 10), satellitesWithPasses: today.total, byCountry: today.byCountry, detailsByCountry: today.detailsByCountry },
+      tomorrow: { date: tomorrowStart.toISOString().slice(0, 10), satellitesWithPasses: tomorrow.total, byCountry: tomorrow.byCountry, detailsByCountry: tomorrow.detailsByCountry },
       cachedAt: new Date().toISOString(),
     };
 
