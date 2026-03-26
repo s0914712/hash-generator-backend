@@ -88,9 +88,29 @@ router.get('/pass-summary', async (req, res) => {
   }
 
   try {
-    // Use 'active' group for broad coverage (limited to first 100 for speed)
-    const satellites = await getTleByGroup('active');
-    const sample = satellites.slice(0, 100);
+    // Use 'active' group for broad coverage
+    // Also fetch Chinese satellites specifically to ensure China coverage
+    const [activeSats, chinaSats] = await Promise.all([
+      getTleByGroup('active'),
+      getTleByName('YAOGAN').catch(() => []),
+    ]);
+
+    // Evenly sample from active group (spread across the full list for country diversity)
+    const maxActive = 120;
+    const step = Math.max(1, Math.floor(activeSats.length / maxActive));
+    const sampled = [];
+    const seenNames = new Set();
+    for (let i = 0; i < activeSats.length && sampled.length < maxActive; i += step) {
+      sampled.push(activeSats[i]);
+      seenNames.add(activeSats[i].name);
+    }
+    // Add Chinese satellites not already in sample (up to 30)
+    let chinaAdded = 0;
+    for (const cs of chinaSats) {
+      if (chinaAdded >= 30) break;
+      if (!seenNames.has(cs.name)) { sampled.push(cs); seenNames.add(cs.name); chinaAdded++; }
+    }
+    const sample = sampled;
 
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
