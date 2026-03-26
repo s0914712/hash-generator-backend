@@ -131,6 +131,25 @@
       text-shadow: 0 0 20px rgba(0,229,255,0.5); animation: loadPulse 1.5s ease-in-out infinite; }
     @keyframes loadPulse { 0%,100% { opacity: 0.6; } 50% { opacity: 1; } }
 
+    /* --- SATELLITE DOTS --- */
+    .sc-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: var(--cyan); box-shadow: 0 0 8px rgba(0,229,255,0.6);
+      pointer-events: auto; cursor: pointer;
+      /* large invisible tap area for mobile */
+      position: relative;
+    }
+    .sc-dot::before {
+      content: ''; position: absolute; top: -14px; left: -14px;
+      width: 40px; height: 40px; border-radius: 50%;
+    }
+    .sc-dot.selected {
+      width: 16px; height: 16px;
+      background: var(--green); box-shadow: 0 0 16px rgba(0,255,136,0.7);
+      animation: dotPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes dotPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.5); } }
+
     /* --- ANIMATIONS --- */
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .fade-in { animation: fadeIn 0.5s ease-out forwards; }
@@ -262,15 +281,24 @@ if (typeof Globe === 'undefined') {
     .labelsData([{ lat: 23.5, lng: 121, text: 'TAIWAN', color: '#ff4444', size: 1.8 }])
     .labelText('text').labelColor('color').labelSize('size').labelDotRadius(0.6).labelAltitude(0.015)
     .labelResolution(3)
-    // Satellites
-    .pointsData([])
-    .pointLat('lat').pointLng('lng')
-    .pointAltitude(function(d) { return d.alt / 6371; })
-    .pointRadius(function(d) { return d.sel ? 0.55 : 0.25; })
-    .pointColor(function(d) { return d.sel ? '#00ff88' : '#00e5ff'; })
-    .pointsMerge(false)
-    .pointLabel(function(d) { return '<span style="color:#00e5ff;font-family:monospace;font-size:12px;background:rgba(0,0,0,0.7);padding:3px 8px;border-radius:4px;border:1px solid rgba(0,229,255,0.3);">' + (d.name || d.id) + '</span>'; })
-    .onPointClick(function(pt) { if (pt && pt.id) { var s = null; for (var i = 0; i < sats.length; i++) { if (sats[i].noradId == pt.id) { s = sats[i]; break; } } if (s) selectSat(s); } })
+    // Satellites (HTML elements for mobile-friendly tap targets)
+    .htmlElementsData([])
+    .htmlLat('lat').htmlLng('lng')
+    .htmlAltitude(function(d) { return d.alt / 6371; })
+    .htmlElement(function(d) {
+      var el = document.createElement('div');
+      el.className = d.sel ? 'sc-dot selected' : 'sc-dot';
+      el.title = d.name || '';
+      el.addEventListener('click', function(ev) {
+        ev.stopPropagation();
+        if (d.id) { var s = null; for (var i = 0; i < sats.length; i++) { if (sats[i].noradId == d.id) { s = sats[i]; break; } } if (s) selectSat(s); }
+      });
+      el.addEventListener('touchend', function(ev) {
+        ev.stopPropagation();
+        if (d.id) { var s = null; for (var i = 0; i < sats.length; i++) { if (sats[i].noradId == d.id) { s = sats[i]; break; } } if (s) selectSat(s); }
+      });
+      return el;
+    })
     // Orbit
     .pathsData([])
     .pathPointLat(function(p) { return p[0]; })
@@ -380,7 +408,7 @@ if (typeof Globe === 'undefined') {
 
   function loadPositions() {
     satPts = [];
-    globe.pointsData([]);
+    globe.htmlElementsData([]);
     var batch = sats.slice(0, 30);
     var done = 0;
     batch.forEach(function(s) {
@@ -389,7 +417,7 @@ if (typeof Globe === 'undefined') {
           id: s.noradId, name: s.name, sel: selected && selected.noradId === s.noradId });
       }).catch(function(){}).finally(function() {
         done++;
-        if (done === batch.length) globe.pointsData(satPts);
+        if (done === batch.length) globe.htmlElementsData(satPts);
       });
     });
   }
@@ -450,7 +478,7 @@ if (typeof Globe === 'undefined') {
         }
       }
       if (!found) satPts.push({ lat: p.latitude, lng: p.longitude, alt: p.altitude, id: id, name: selected ? selected.name : '', sel: true });
-      globe.pointsData(satPts.slice());
+      globe.htmlElementsData(satPts.slice());
 
       if (pan) {
         autoRotate = false; lastInteraction = Date.now();
