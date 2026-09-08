@@ -1,4 +1,4 @@
-import { CACHE_TTL_MS } from './constants.js';
+import { CACHE_TTL_MS, CHINA_SERIES } from './constants.js';
 
 const cache = new Map();
 
@@ -33,8 +33,12 @@ function parseEpoch(tleLine1) {
   };
 }
 
+// Bound each request so one slow CelesTrak response cannot stall a report
+// that fetches many series in parallel.
+const FETCH_TIMEOUT_MS = 8000;
+
 async function fetchTle(url) {
-  const res = await fetch(url);
+  const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
   if (!res.ok) {
     throw new Error(`CelesTrak returned ${res.status}`);
   }
@@ -111,7 +115,8 @@ export async function getTleByName(name) {
 
 // Pre-warm cache for commonly used groups and Chinese satellite series
 const WARM_GROUPS = ['active', 'stations', 'weather', 'starlink', 'gps-ops', 'galileo'];
-const WARM_SERIES = ['YAOGAN', 'GAOFEN', 'BEIDOU', 'FENGYUN', 'JILIN', 'YUNHAI', 'HAIYANG', 'TIANHUI'];
+// Every series the China pass report needs, so the report never pays for a cold fetch.
+const WARM_SERIES = CHINA_SERIES;
 
 export async function warmCache() {
   const results = { groups: 0, series: 0, errors: [] };
