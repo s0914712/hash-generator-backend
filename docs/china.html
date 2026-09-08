@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中國衛星通過台灣時間表</title>
+<style>
+  :root {
+    --bg: #0a0e27;
+    --panel: #131938;
+    --panel-2: #1a2148;
+    --border: #2a2f5e;
+    --text: #e2e8f5;
+    --muted: #8593b8;
+    --accent: #ff5c5c;
+    --accent-dim: rgba(255, 92, 92, 0.15);
+    --blue: #7eb8ff;
+    --green: #35d07f;
+    --amber: #ffb020;
+    --mono: 'SF Mono', 'Menlo', 'Consolas', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans TC', sans-serif;
+    line-height: 1.5; padding-bottom: 40px;
+  }
+  a { color: var(--blue); }
+
+  header {
+    background: linear-gradient(135deg, #1a1f4e, #0a0e27);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 18px 12px;
+    position: sticky; top: 0; z-index: 20;
+    backdrop-filter: blur(10px);
+  }
+  .title-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  h1 { font-size: 1.15rem; color: var(--text); }
+  h1 .flag { color: var(--accent); }
+  .sub { font-size: 0.72rem; color: var(--muted); }
+  .nav { margin-left: auto; display: flex; gap: 6px; }
+  .nav a {
+    font-size: 0.72rem; text-decoration: none; color: var(--muted);
+    border: 1px solid var(--border); border-radius: 6px; padding: 4px 9px;
+  }
+  .nav a:hover { color: var(--blue); border-color: var(--blue); }
+
+  .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+  .tabs { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .tabs button {
+    background: transparent; border: none; color: var(--muted);
+    padding: 6px 14px; font-size: 0.82rem; cursor: pointer; font-family: inherit;
+  }
+  .tabs button.active { background: var(--accent-dim); color: var(--accent); font-weight: 700; }
+  select, input[type="search"] {
+    background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 7px; padding: 6px 9px; font-size: 0.78rem; font-family: inherit;
+  }
+  input[type="search"] { width: 150px; }
+  .ghost-btn {
+    background: var(--panel-2); border: 1px solid var(--border); color: var(--muted);
+    border-radius: 7px; padding: 6px 10px; font-size: 0.78rem; cursor: pointer; font-family: inherit;
+  }
+  .ghost-btn:hover { color: var(--blue); border-color: var(--blue); }
+
+  main { max-width: 980px; margin: 0 auto; padding: 16px 18px; }
+
+  .banner {
+    background: var(--panel); border: 1px solid var(--border); border-left: 3px solid var(--accent);
+    border-radius: 10px; padding: 12px 14px; margin-bottom: 14px;
+  }
+  .banner .lead { font-size: 0.7rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  .banner .headline { font-size: 1rem; margin-top: 3px; }
+  .banner .headline .win { font-family: var(--mono); color: var(--accent); font-weight: 700; }
+  .banner .meta { font-size: 0.75rem; color: var(--muted); margin-top: 3px; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-bottom: 16px; }
+  .stat { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+  .stat .k { font-size: 0.68rem; color: var(--muted); }
+  .stat .v { font-size: 1.25rem; font-weight: 700; font-family: var(--mono); color: var(--blue); }
+  .stat .v small { font-size: 0.75rem; color: var(--muted); font-weight: 400; }
+
+  h2 { font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1.2px; margin: 18px 0 8px; }
+
+  /* 24-hour density chart */
+  .timeline {
+    display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 8px 6px; align-items: end; height: 116px;
+  }
+  .tl-col { display: flex; flex-direction: column; justify-content: flex-end; height: 100%; cursor: pointer; }
+  .tl-bar {
+    background: linear-gradient(180deg, var(--accent), #7a2020);
+    border-radius: 2px 2px 0 0; min-height: 2px; transition: opacity 0.15s;
+  }
+  .tl-col.empty .tl-bar { background: #232a52; }
+  .tl-col.now .tl-bar { background: linear-gradient(180deg, var(--amber), #7a5a10); }
+  .tl-col:hover .tl-bar { opacity: 0.7; }
+  .tl-n { font-size: 0.6rem; text-align: center; color: var(--muted); font-family: var(--mono); height: 12px; }
+  .tl-h { font-size: 0.55rem; text-align: center; color: #566089; font-family: var(--mono); margin-top: 2px; }
+
+  /* Hour groups */
+  .hour-group { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; background: var(--panel); overflow: hidden; }
+  .hour-head {
+    display: flex; align-items: center; gap: 10px; padding: 9px 13px; cursor: pointer;
+    background: var(--panel-2);
+  }
+  .hour-head:hover { background: #1f2755; }
+  .hour-head .arrow { color: var(--muted); font-size: 0.65rem; transition: transform 0.2s; }
+  .hour-head.open .arrow { transform: rotate(90deg); }
+  .hour-head .span { font-family: var(--mono); font-size: 0.95rem; font-weight: 700; color: var(--text); letter-spacing: 0.5px; }
+  .hour-head .cnt { font-size: 0.72rem; color: var(--accent); }
+  .hour-head .cov { font-size: 0.7rem; color: var(--muted); margin-left: auto; font-family: var(--mono); }
+  .hour-body { display: none; }
+  .hour-body.open { display: block; }
+
+  .pass {
+    display: flex; align-items: center; gap: 10px; padding: 8px 13px;
+    border-top: 1px solid #1e2450; font-size: 0.8rem;
+  }
+  .pass.past { opacity: 0.42; }
+  .pass.live { background: rgba(53, 208, 127, 0.08); }
+  .pass .time { font-family: var(--mono); font-weight: 700; color: var(--text); white-space: nowrap; }
+  .pass.live .time { color: var(--green); }
+  .pass .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pass .name .norad { color: var(--muted); font-size: 0.7rem; font-family: var(--mono); }
+  .pass .tag {
+    font-size: 0.62rem; padding: 1px 6px; border-radius: 4px;
+    background: var(--accent-dim); color: var(--accent); white-space: nowrap;
+  }
+  .pass .num { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+  .pass .el { color: var(--amber); }
+  .live-dot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green); margin-right: 4px; animation: pulse 1.6s infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+  .geo-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .geo-chip {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
+    padding: 4px 11px; font-size: 0.73rem;
+  }
+  .geo-chip .el { color: var(--amber); font-family: var(--mono); font-size: 0.68rem; }
+
+  .note { font-size: 0.72rem; color: var(--muted); margin-top: 18px; line-height: 1.7; }
+  .note code { background: var(--panel-2); padding: 1px 5px; border-radius: 4px; font-size: 0.9em; }
+  .empty-state { color: var(--muted); font-size: 0.82rem; padding: 20px; text-align: center; }
+  .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: -2px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 620px) {
+    main { padding: 12px; }
+    .tl-h { display: none; }
+    .timeline { height: 92px; }
+    .pass { flex-wrap: wrap; gap: 6px; }
+    .pass .name { flex-basis: 100%; order: 3; }
+    .nav { width: 100%; margin-left: 0; margin-top: 6px; }
+    /* The control block is tall on a phone; let it scroll away instead of
+       eating half the viewport. */
+    header { position: static; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-row">
+    <h1><span class="flag">🇨🇳</span> 中國衛星通過台灣時間表</h1>
+    <span class="sub" id="observerLine">觀測點 23.5°N, 121.0°E ・ 台北時間 UTC+8</span>
+    <span class="nav">
+      <a href="index.html">3D 追蹤</a>
+      <a href="showcase.html">Showcase</a>
+    </span>
+  </div>
+  <div class="controls">
+    <div class="tabs">
+      <button id="tabToday" class="active" data-day="0">今日</button>
+      <button id="tabTomorrow" data-day="1">明日</button>
+    </div>
+    <select id="elevSel" title="最低仰角">
+      <option value="10" selected>仰角 ≥ 10°</option>
+      <option value="20">仰角 ≥ 20°</option>
+      <option value="30">仰角 ≥ 30°</option>
+      <option value="45">仰角 ≥ 45°</option>
+    </select>
+    <select id="seriesSel" title="衛星系列"><option value="">全部系列</option></select>
+    <input type="search" id="searchInput" placeholder="搜尋衛星名稱…">
+    <button class="ghost-btn" id="expandBtn">全部展開</button>
+    <button class="ghost-btn" id="reloadBtn">重新整理</button>
+  </div>
+</header>
+
+<main>
+  <div class="banner" id="banner">
+    <div class="lead">狀態</div>
+    <div class="headline"><span class="spinner"></span> 計算中…</div>
+    <div class="meta">正在向後端取得最新 TLE 軌道資料並推算通過時間</div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <h2 id="timelineTitle">每小時通過次數</h2>
+  <div class="timeline" id="timeline"></div>
+
+  <h2>通過時段明細</h2>
+  <div id="hourList"><div class="empty-state">載入中…</div></div>
+
+  <div id="geoSection" style="display:none;">
+    <h2>持續位於視野內（同步軌道）</h2>
+    <div class="geo-list" id="geoList"></div>
+  </div>
+
+  <div class="note" id="note"></div>
+</main>
+
+<script>
+(function () {
+  var API = 'https://hash-generator-backend-ten.vercel.app';
+  var override = new URLSearchParams(location.search).get('api');
+  if (override) API = override.replace(/\/$/, '');
+
+  var report = null;
+  var dayIndex = 0;
+  var openHours = {};
+  var allExpanded = false;
+  var clockTimer = null;
+
+  var el = function (id) { return document.getElementById(id); };
+
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+
+  function fmtDuration(seconds) {
+    var m = Math.floor(seconds / 60), s = seconds % 60;
+    if (m >= 60) return Math.floor(m / 60) + ' 小時 ' + (m % 60) + ' 分';
+    return m > 0 ? m + ' 分 ' + pad2(s) + ' 秒' : s + ' 秒';
+  }
+
+  function fmtCountdown(ms) {
+    var total = Math.round(ms / 1000);
+    if (total < 0) total = 0;
+    var h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), s = total % 60;
+    if (h > 0) return h + ' 小時 ' + m + ' 分';
+    if (m > 0) return m + ' 分 ' + pad2(s) + ' 秒';
+    return s + ' 秒';
+  }
+
+  // Current Taipei wall-clock hour, regardless of the viewer's own timezone.
+  function taipeiNow() {
+    return new Date(Date.now() + 8 * 3600 * 1000);
+  }
+
+  function currentDay() { return report ? report.days[dayIndex] : null; }
+
+  function passesFor(day) {
+    var series = el('seriesSel').value;
+    var q = el('searchInput').value.trim().toLowerCase();
+    return day.passes.filter(function (p) {
+      if (series && p.series !== series) return false;
+      if (q && p.name.toLowerCase().indexOf(q) === -1 && String(p.noradId).indexOf(q) === -1) return false;
+      return true;
+    });
+  }
+
+  function passState(p) {
+    var now = Date.now();
+    if (new Date(p.end).getTime() < now) return 'past';
+    if (new Date(p.start).getTime() <= now) return 'live';
+    return 'future';
+  }
+
+  // --- rendering ------------------------------------------------------------
+
+  function renderBanner(passes) {
+    var b = el('banner');
+    var now = Date.now();
+    var live = null, next = null;
+    for (var i = 0; i < passes.length; i++) {
+      var st = passState(passes[i]);
+      if (st === 'live' && !live) live = passes[i];
+      if (st === 'future' && !next) { next = passes[i]; break; }
+    }
+
+    var html;
+    if (live) {
+      html = '<div class="lead">正在通過</div>' +
+        '<div class="headline"><span class="live-dot"></span>' + esc(live.name) +
+        ' <span class="win">' + live.startLocal + '–' + live.endLocal + '</span></div>' +
+        '<div class="meta">最高仰角 ' + live.maxElevation + '° ・ ' + esc(live.direction || '') +
+        ' ・ 結束於 ' + live.endLocal + '（還有 ' + fmtCountdown(new Date(live.end).getTime() - now) + '）</div>';
+    } else if (next) {
+      html = '<div class="lead">' + (dayIndex === 0 ? '下一次通過' : '明日第一次通過') + '</div>' +
+        '<div class="headline">' + esc(next.name) +
+        ' <span class="win">' + next.startLocal + '–' + next.endLocal + '</span></div>' +
+        '<div class="meta">' + next.hourWindow + ' 時段 ・ 最高仰角 ' + next.maxElevation + '° ・ 歷時 ' +
+        fmtDuration(next.durationSeconds) + ' ・ 還有 ' + fmtCountdown(new Date(next.start).getTime() - now) + '</div>';
+    } else {
+      html = '<div class="lead">狀態</div><div class="headline">此條件下已無後續通過</div>' +
+        '<div class="meta">可切換到明日，或放寬仰角與系列篩選條件</div>';
+    }
+    b.innerHTML = html;
+  }
+
+  function renderStats(passes) {
+    var totalSeconds = 0, sats = {};
+    passes.forEach(function (p) { totalSeconds += p.durationSeconds; sats[p.noradId] = 1; });
+    var busiest = null;
+    var buckets = hourBuckets(passes);
+    for (var h = 0; h < 24; h++) {
+      if (!busiest || buckets[h].length > buckets[busiest].length) busiest = h;
+    }
+    var busiestLabel = busiest != null && buckets[busiest].length
+      ? pad2(busiest) + '00-' + pad2(busiest + 1) + '00' : '—';
+
+    el('stats').innerHTML = [
+      stat('通過次數', passes.length, '次'),
+      stat('涉及衛星', Object.keys(sats).length, '顆'),
+      stat('累計時間', Math.round(totalSeconds / 60), '分鐘'),
+      stat('最密集時段', busiestLabel, busiest != null && buckets[busiest].length ? buckets[busiest].length + ' 次' : ''),
+    ].join('');
+  }
+
+  function stat(k, v, unit) {
+    return '<div class="stat"><div class="k">' + k + '</div><div class="v">' + v +
+      (unit ? ' <small>' + unit + '</small>' : '') + '</div></div>';
+  }
+
+  // Group passes into the 24 hour buckets of the displayed day.
+  function hourBuckets(passes) {
+    var buckets = [];
+    for (var h = 0; h < 24; h++) buckets.push([]);
+    passes.forEach(function (p) {
+      var h = parseInt(p.startLocal.slice(0, 2), 10);
+      if (h >= 0 && h < 24) buckets[h].push(p);
+    });
+    return buckets;
+  }
+
+  function renderTimeline(buckets) {
+    var max = 1;
+    buckets.forEach(function (b) { if (b.length > max) max = b.length; });
+    var nowHour = dayIndex === 0 ? taipeiNow().getUTCHours() : -1;
+
+    var html = '';
+    for (var h = 0; h < 24; h++) {
+      var n = buckets[h].length;
+      var pct = Math.round((n / max) * 100);
+      html += '<div class="tl-col' + (n ? '' : ' empty') + (h === nowHour ? ' now' : '') +
+        '" data-hour="' + h + '" title="' + pad2(h) + '00-' + pad2(h + 1) + '00：' + n + ' 次">' +
+        '<div class="tl-n">' + (n || '') + '</div>' +
+        '<div class="tl-bar" style="height:' + Math.max(pct, n ? 6 : 2) + '%"></div>' +
+        '<div class="tl-h">' + pad2(h) + '</div></div>';
+    }
+    el('timeline').innerHTML = html;
+
+    Array.prototype.forEach.call(el('timeline').querySelectorAll('.tl-col'), function (col) {
+      col.addEventListener('click', function () {
+        var h = col.getAttribute('data-hour');
+        var group = document.getElementById('hg-' + h);
+        if (!group) return;
+        openHours[h] = true;
+        renderHours(buckets);
+        document.getElementById('hg-' + h).scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    });
+  }
+
+  function renderHours(buckets) {
+    var html = '';
+    var any = false;
+    var nowHour = dayIndex === 0 ? taipeiNow().getUTCHours() : -1;
+
+    for (var h = 0; h < 24; h++) {
+      var list = buckets[h];
+      if (!list.length) continue;
+      any = true;
+      var open = allExpanded || openHours[h] || h === nowHour;
+      var coverage = 0;
+      list.forEach(function (p) { coverage += p.durationSeconds; });
+
+      html += '<div class="hour-group" id="hg-' + h + '">' +
+        '<div class="hour-head' + (open ? ' open' : '') + '" data-hour="' + h + '">' +
+        '<span class="arrow">&#9654;</span>' +
+        '<span class="span">' + pad2(h) + '00-' + pad2(h + 1) + '00</span>' +
+        '<span class="cnt">' + list.length + ' 次通過</span>' +
+        '<span class="cov">累計 ' + Math.round(coverage / 60) + ' 分</span>' +
+        '</div><div class="hour-body' + (open ? ' open' : '') + '">';
+
+      list.forEach(function (p) {
+        var state = dayIndex === 0 ? passState(p) : 'future';
+        html += '<div class="pass ' + state + '">' +
+          '<span class="time">' + (state === 'live' ? '<span class="live-dot"></span>' : '') +
+          p.startLocal + '–' + p.endLocal + '</span>' +
+          '<span class="tag">' + esc(p.series) + '</span>' +
+          '<span class="name">' + esc(p.name) + ' <span class="norad">#' + esc(p.noradId) + '</span></span>' +
+          '<span class="num el">▲ ' + p.maxElevation + '°</span>' +
+          '<span class="num">' + fmtDuration(p.durationSeconds) + '</span>' +
+          '<span class="num">' + esc(p.direction || '') + '</span>' +
+          '</div>';
+      });
+      html += '</div></div>';
+    }
+
+    el('hourList').innerHTML = any ? html :
+      '<div class="empty-state">此條件下沒有通過紀錄，試著放寬仰角或清除篩選。</div>';
+
+    Array.prototype.forEach.call(el('hourList').querySelectorAll('.hour-head'), function (head) {
+      head.addEventListener('click', function () {
+        var h = head.getAttribute('data-hour');
+        var body = head.nextElementSibling;
+        var nowOpen = body.classList.toggle('open');
+        head.classList.toggle('open', nowOpen);
+        openHours[h] = nowOpen;
+      });
+    });
+  }
+
+  function renderGeo() {
+    if (!report.alwaysVisible || !report.alwaysVisible.length) {
+      el('geoSection').style.display = 'none';
+      return;
+    }
+    el('geoSection').style.display = 'block';
+    el('geoList').innerHTML = report.alwaysVisible.map(function (s) {
+      return '<span class="geo-chip">' + esc(s.name) +
+        ' <span class="el">▲ ' + s.maxElevation + '°</span></span>';
+    }).join('');
+  }
+
+  function renderNote() {
+    var src = report.source;
+    var failed = src.failedSeries && src.failedSeries.length
+      ? '　取得失敗的系列：' + src.failedSeries.join(', ') + '。' : '';
+    el('note').innerHTML =
+      '所有時間為<strong>台北時間（UTC+8）</strong>，觀測點為台灣中心 ' +
+      report.observer.latitude + '°N, ' + report.observer.longitude + '°E。' +
+      '「通過」定義為衛星仰角高於 <code>' + report.minElevation + '°</code> 的連續時段，' +
+      '起訖時間以二分法收斂至數秒內。<br>' +
+      '追蹤 ' + src.satellitesTracked + ' 顆中國衛星（共比對 ' + src.satellitesAvailable + ' 顆，' +
+      (src.truncated ? '已取樣上限' : '全數納入') + '），涵蓋 ' + src.series.length + ' 個系列。' + failed + '<br>' +
+      '軌道資料來源 CelesTrak TLE，後端每日更新並快取；本頁資料計算於 ' +
+      new Date(report.generatedAt).toLocaleString('zh-TW') + '。<br>' +
+      'API：<code>GET /satellites/china-passes?minElevation=' + report.minElevation + '</code>';
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function render() {
+    if (!report) return;
+    var day = currentDay();
+    var passes = passesFor(day);
+    var buckets = hourBuckets(passes);
+
+    el('timelineTitle').textContent = '每小時通過次數 ・ ' + day.date +
+      '（' + (dayIndex === 0 ? '今日' : '明日') + '）';
+    renderBanner(passes);
+    renderStats(passes);
+    renderTimeline(buckets);
+    renderHours(buckets);
+    renderGeo();
+    renderNote();
+  }
+
+  // --- data -----------------------------------------------------------------
+
+  function load() {
+    el('banner').innerHTML = '<div class="lead">狀態</div>' +
+      '<div class="headline"><span class="spinner"></span> 計算中…</div>' +
+      '<div class="meta">正在向後端取得最新 TLE 軌道資料並推算通過時間</div>';
+    el('hourList').innerHTML = '<div class="empty-state">載入中…</div>';
+
+    var url = API + '/satellites/china-passes?minElevation=' + el('elevSel').value;
+    fetch(url).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function (data) {
+      report = data;
+      openHours = {};
+      fillSeries(data);
+      el('observerLine').textContent = '觀測點 ' + data.observer.latitude + '°N, ' +
+        data.observer.longitude + '°E ・ ' + data.timezone.name + ' ' + data.timezone.label;
+      el('tabToday').textContent = '今日 ' + data.days[0].date.slice(5);
+      el('tabTomorrow').textContent = '明日 ' + data.days[1].date.slice(5);
+      render();
+      if (clockTimer) clearInterval(clockTimer);
+      clockTimer = setInterval(function () {
+        if (dayIndex === 0) { renderBanner(passesFor(currentDay())); }
+      }, 1000);
+    }).catch(function (err) {
+      el('banner').innerHTML = '<div class="lead">錯誤</div>' +
+        '<div class="headline">無法取得通過時間</div>' +
+        '<div class="meta">' + esc(err.message) + ' ・ 請稍後再試，或確認後端服務是否可用。</div>';
+      el('hourList').innerHTML = '<div class="empty-state">沒有資料。</div>';
+    });
+  }
+
+  function fillSeries(data) {
+    var sel = el('seriesSel');
+    var current = sel.value;
+    var present = {};
+    data.days.forEach(function (d) { d.passes.forEach(function (p) { present[p.series] = 1; }); });
+    var labels = data.seriesLabels || {};
+    var html = '<option value="">全部系列</option>';
+    Object.keys(present).sort().forEach(function (s) {
+      html += '<option value="' + esc(s) + '">' + esc(s) +
+        (labels[s] ? ' ' + esc(labels[s].replace(/\s*\(.*\)$/, '')) : '') + '</option>';
+    });
+    sel.innerHTML = html;
+    if (present[current]) sel.value = current;
+  }
+
+  // --- events ---------------------------------------------------------------
+
+  Array.prototype.forEach.call(document.querySelectorAll('.tabs button'), function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelector('.tabs button.active').classList.remove('active');
+      btn.classList.add('active');
+      dayIndex = parseInt(btn.getAttribute('data-day'), 10);
+      openHours = {};
+      render();
+    });
+  });
+
+  el('elevSel').addEventListener('change', load);
+  el('seriesSel').addEventListener('change', render);
+  el('searchInput').addEventListener('input', render);
+  el('reloadBtn').addEventListener('click', load);
+  el('expandBtn').addEventListener('click', function () {
+    allExpanded = !allExpanded;
+    el('expandBtn').textContent = allExpanded ? '全部收合' : '全部展開';
+    if (!allExpanded) openHours = {};
+    render();
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>

@@ -1,7 +1,17 @@
 import { Router } from 'express';
-import { SATELLITE_GROUPS, DEFAULT_GROUP, TAIWAN, SATELLITE_SERIES } from './constants.js';
+import {
+  SATELLITE_GROUPS,
+  DEFAULT_GROUP,
+  TAIWAN,
+  SATELLITE_SERIES,
+  CHINA_SERIES,
+  CHINA_PASSES_MAX_SATELLITES,
+  MIN_ELEVATION_DEG,
+  TAIWAN_UTC_OFFSET_MINUTES,
+} from './constants.js';
 import { getTleByGroup, getTleByCatalogNumber, getTleByName, parseNoradId, parseIntlDesignator, parseEpoch } from './tleCache.js';
 import { getPosition, getOrbitPath, getPasses, countPasses } from './propagator.js';
+import { buildChinaPassReport } from './chinaPasses.js';
 
 const router = Router();
 
@@ -155,6 +165,49 @@ router.get('/pass-summary', async (req, res) => {
   }
 });
 
+// China pass report cache (heavy computation, cache for 3 hours)
+const chinaCache = new Map();
+const CHINA_TTL = 3 * 60 * 60 * 1000;
+
+// GET /satellites/china-passes - Chinese satellite pass windows over Taiwan (today + tomorrow)
+router.get('/china-passes', async (req, res) => {
+  const series = req.query.series ? String(req.query.series).toUpperCase() : null;
+  if (series && CHINA_SERIES.indexOf(series) === -1) {
+    return res.status(400).json({
+      error: 'Unknown Chinese satellite series',
+      validSeries: CHINA_SERIES,
+    });
+  }
+
+  let minElevation = parseFloat(req.query.minElevation);
+  if (!Number.isFinite(minElevation)) minElevation = MIN_ELEVATION_DEG;
+  minElevation = Math.min(Math.max(minElevation, 0), 80);
+
+  let limit = parseInt(req.query.limit, 10);
+  if (!Number.isFinite(limit) || limit <= 0) limit = CHINA_PASSES_MAX_SATELLITES;
+  limit = Math.min(limit, 400);
+
+  // Results are keyed by the local day so the cache turns over at midnight.
+  const localDay = new Date(Date.now() + TAIWAN_UTC_OFFSET_MINUTES * 60 * 1000)
+    .toISOString().slice(0, 10);
+  const cacheKey = [localDay, series || 'ALL', minElevation, limit].join('|');
+  const cached = chinaCache.get(cacheKey);
+  if (cached && (Date.now() - cached.timestamp) < CHINA_TTL) {
+    return res.json(cached.data);
+  }
+
+  try {
+    const report = await buildChinaPassReport({ series, minElevation, limit });
+    if (report.source.satellitesAvailable === 0) {
+      return res.status(502).json({ error: 'Failed to fetch TLE data from CelesTrak' });
+    }
+    chinaCache.set(cacheKey, { data: report, timestamp: Date.now() });
+    res.json(report);
+  } catch (err) {
+    res.status(502).json({ error: 'Failed to compute China pass report' });
+  }
+});
+
 // GET /satellites/series - List available satellite series
 router.get('/series', (req, res) => {
   res.json({ series: SATELLITE_SERIES });
@@ -252,6 +305,7 @@ router.get('/:id/orbit', async (req, res) => {
 export function resetSummaryCache() {
   summaryCache = null;
   summaryCacheTime = 0;
+  chinaCache.clear();
 }
 
 export default router;

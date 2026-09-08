@@ -64,3 +64,32 @@ export const SATELLITE_SERIES = {
   'IRIDIUM': 'Iridium (Communications)',
   'COSMOS': 'Cosmos (Russia)',
 };
+
+// Taiwan uses UTC+8 year-round (no DST), so a fixed offset is safe.
+export const TAIWAN_UTC_OFFSET_MINUTES = 8 * 60;
+
+// Chinese satellite series used by the "China passes over Taiwan" report.
+// Ordered by relevance so that round-robin sampling keeps every series represented.
+export const CHINA_SERIES = [
+  'YAOGAN',
+  'GAOFEN',
+  'JILIN',
+  'SHIYAN',
+  'SHIJIAN',
+  'YUNHAI',
+  'HAIYANG',
+  'TIANHUI',
+  'HUANJING',
+  'ZIYUAN',
+  'FENGYUN',
+  'CHUANGXIN',
+  'TIANGONG',
+  'SHENZHOU',
+  'TIANZHOU',
+  'BEIDOU',
+  'ZHONGXING',
+  'TIANTONG',
+];
+
+// Upper bound on satellites propagated for one china-passes report.
+export const CHINA_PASSES_MAX_SATELLITES = 220;

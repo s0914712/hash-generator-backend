@@ -10,6 +10,7 @@
 
 - **Dashboard** — 完整功能的衛星追蹤儀表板：[index.html](https://s0914712.github.io/hash-generator-backend/index.html)
 - **Showcase** — 指揮中心風格的視覺化介面：[showcase.html](https://s0914712.github.io/hash-generator-backend/showcase.html)
+- **China Passes** — 中國衛星通過台灣的逐時時間表：[china.html](https://s0914712.github.io/hash-generator-backend/china.html)
 
 ## Features
 
@@ -30,6 +31,12 @@
 - 顯示仰角、方位角、持續時間等詳細資訊
 - 每日過境摘要，依國家分類統計
 
+### 中國衛星通過時間表
+- 今日與明日每一次通過的**實際起訖時間**（台北時間 UTC+8），例如 `08:12–08:24`，而非只有次數
+- 以 `0800-0900` 為單位的每小時分組與長條圖，可一眼看出密集時段
+- 粗掃 + 二分法收斂，起訖時間誤差在數秒內
+- 標示進行中／下一次通過並即時倒數；同步軌道衛星另列為「持續位於視野內」
+
 ### 雙前端介面
 | Dashboard (`index.html`) | Showcase (`showcase.html`) |
 |---|---|
@@ -38,6 +45,8 @@
 | 高度範圍篩選器 | 底部衛星晶片選擇列 |
 | 搜尋功能 | 即時 UTC 時鐘 |
 | 深藍色主題 | 暗黑 + 青色/綠色主題 |
+
+另有 **China Passes (`china.html`)**：專注於中國衛星通過台灣時間表的單頁介面，提供日期切換、仰角門檻、系列篩選與名稱搜尋。
 
 ## Tech Stack
 
@@ -59,11 +68,13 @@
 ├── satellite/
 │   ├── constants.js            # 觀測站座標、衛星群組/系列定義
 │   ├── tleCache.js             # TLE 資料快取（2 小時 TTL）
-│   ├── propagator.js           # 軌道傳播計算（位置、軌道、過境）
+│   ├── propagator.js           # 軌道傳播計算（位置、軌道、過境、通過時間窗）
+│   ├── chinaPasses.js          # 中國衛星通過台灣的每日時間表計算
 │   └── router.js               # API 路由
 └── docs/
     ├── index.html              # Dashboard 前端
-    └── showcase.html           # Showcase 前端
+    ├── showcase.html           # Showcase 前端
+    └── china.html              # 中國衛星通過時間表前端
 ```
 
 ## API Reference
@@ -82,6 +93,7 @@
 | `GET` | `/satellites` | 取得衛星列表 |
 | `GET` | `/satellites/series` | 取得可用衛星系列 |
 | `GET` | `/satellites/pass-summary` | 每日過境摘要（台灣） |
+| `GET` | `/satellites/china-passes` | 中國衛星今明兩日通過台灣的時間窗口 |
 | `GET` | `/satellites/:id/position` | 衛星即時位置 |
 | `GET` | `/satellites/:id/passes` | 過境預測（台灣） |
 | `GET` | `/satellites/:id/orbit` | 軌道路徑 |
@@ -105,6 +117,13 @@
 |---|---|---|---|
 | `hours` | number | `24` | 預測時間窗口（1-72 小時） |
 | `minElevation` | number | `10` | 最低仰角（度） |
+
+**`GET /satellites/china-passes`**
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `series` | string | — | 限定單一中國衛星系列（如 `YAOGAN`），省略則涵蓋全部 18 個系列 |
+| `minElevation` | number | `10` | 最低仰角（0-80 度）；通過定義為仰角高於此值的連續時段 |
+| `limit` | number | `220` | 納入計算的衛星數上限（最大 400），跨系列輪流取樣 |
 
 **`GET /satellites/:id/orbit`**
 | Param | Type | Default | Description |
@@ -175,6 +194,70 @@
 ```
 </details>
 
+<details>
+<summary>GET /satellites/china-passes</summary>
+
+```json
+{
+  "observer": { "latitude": 23.5, "longitude": 121, "location": "Taiwan" },
+  "timezone": { "name": "Asia/Taipei", "label": "UTC+8", "utcOffsetMinutes": 480 },
+  "minElevation": 10,
+  "seriesLabels": { "YAOGAN": "遥感 (Remote Sensing)" },
+  "source": {
+    "country": "China",
+    "series": ["YAOGAN", "GAOFEN", "JILIN", "..."],
+    "failedSeries": [],
+    "satellitesAvailable": 612,
+    "satellitesTracked": 220,
+    "truncated": true
+  },
+  "days": [
+    {
+      "label": "today",
+      "date": "2025-03-27",
+      "passCount": 742,
+      "satelliteCount": 168,
+      "coverageMinutes": 5036.2,
+      "busiestHour": { "hour": 8, "label": "0800-0900", "passes": 43 },
+      "hours": [
+        { "hour": 8, "label": "0800-0900", "passes": 43, "coverageMinutes": 299.4,
+          "satelliteCount": 41, "satellites": ["YAOGAN-33 (B)", "GAOFEN-11"] }
+      ],
+      "passes": [
+        {
+          "name": "YAOGAN-33 (B)",
+          "noradId": "48918",
+          "series": "YAOGAN",
+          "start": "2025-03-27T00:12:31.000Z",
+          "end": "2025-03-27T00:24:07.000Z",
+          "startLocal": "08:12",
+          "endLocal": "08:24",
+          "window": "0812-0824",
+          "hourWindow": "0800-0900",
+          "durationSeconds": 696,
+          "maxElevation": 42.1,
+          "maxElevationLocal": "08:18",
+          "startAzimuth": 12.4,
+          "endAzimuth": 190.2,
+          "direction": "NNE → S"
+        }
+      ]
+    },
+    { "label": "tomorrow", "date": "2025-03-28", "...": "同上結構" }
+  ],
+  "alwaysVisible": [
+    { "name": "ZHONGXING-6C", "noradId": "44231", "series": "ZHONGXING",
+      "seriesLabel": "中星 (Communications)", "meanMotion": 1.0027, "maxElevation": 48.7 }
+  ],
+  "generatedAt": "2025-03-27T04:00:00.000Z"
+}
+```
+
+`window` 是實際起訖（`0812-0824`），`hourWindow` 是所屬的整點時段（`0800-0900`）；
+`hours` 為 24 個整點分桶，供時間軸圖表直接使用。同步軌道衛星不會產生跨日的假時間窗，
+而是列入 `alwaysVisible`。
+</details>
+
 ## Getting Started
 
 ### Prerequisites
@@ -210,7 +293,8 @@ vercel
 |---|---|---|
 | TLE Data | 2 hours | CelesTrak 衛星軌道元素快取，失敗時回退至過期資料 |
 | Pass Summary | 3 hours | 每日過境摘要計算結果快取 |
-| Cron Warm-up | Daily 04:00 UTC | 預熱 6 個衛星群組 + 8 個中國衛星系列 |
+| China Passes | 3 hours | 中國衛星通過時間表快取，依台北日期分鍵，跨日自動失效 |
+| Cron Warm-up | Daily 04:00 UTC | 預熱 6 個衛星群組 + 18 個中國衛星系列 |
 
 ## Supported Satellite Series
 
